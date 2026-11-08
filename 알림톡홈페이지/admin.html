@@ -1,0 +1,1181 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>알림톡 관제탑</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+html,body{margin:0}
+
+/* 택스팟 사무실 앱(web/src/styles/index.css)과 같은 자. 왼쪽 기둥(옅은 회색) + 46px 제목줄 + 흰 본문.
+   택스팟은 밝은 화면 한 벌만 쓰므로 여기도 밝은 화면으로 고정한다. */
+:root{
+  --bg:#FFFFFF; --rail:#F7F7F9; --card:#FFFFFF;
+  --ink:#18181D; --body:#505058; --muted-strong:#6B6B73; --muted:#8E8E96; --faint:#C9C9CF;
+  --field:#F1F1F4; --line:#E4E4E9; --line-soft:#F0F0F4;
+  --brand:#4F46E5; --brand-dark:#4338CA; --brand-soft:#F1F0FD;
+  --accent:#505058; --accent-ink:#3E3E45; --accent-soft:#F1F1F4; --accent-line:#E4E4E9;
+  --bad:#D03B3B; --bad-bg:#FCEBE9; --bad-ink:#B3352A;
+  --warn:#E0A020; --warn-bg:#FFF7E0; --warn-line:#F0E3B8; --warn-ink:#7A5606;
+  --good:#2E9E62; --good-bg:#E7F6EE; --good-ink:#1E6E43;
+  --font:'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--body);font-family:var(--font);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{color:var(--ink);line-height:1.3;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+input,select,textarea,table,.tnum{font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+
+/* ── 틀 ── */
+.app{display:grid;grid-template-columns:212px 1fr;min-height:100vh;align-items:start}
+.rail{position:sticky;top:0;height:100vh;overflow:auto;background:var(--rail);border-right:1px solid var(--line)}
+.rail-head{position:sticky;top:0;z-index:2;height:46px;display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--rail)}
+.ws{display:flex;align-items:center;gap:8px;min-width:0;padding:4px 6px;border-radius:6px}
+.ws-logo{width:22px;height:22px;border-radius:6px;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:800;flex:none}
+.ws b{font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rail-body{padding:4px 10px 32px}
+.folder{font-size:12px;color:var(--muted);padding:8px 7px 3px}
+.sep{height:1px;background:var(--line);margin:8px 6px}
+.row{margin-bottom:1px;display:flex;width:100%;align-items:center;gap:8px;border:0;background:none;border-radius:6px;padding:5px 10px;font-size:14px;line-height:1.25;color:var(--ink);text-align:left;cursor:pointer}
+.row:hover{background:var(--card)}
+.row .ic{width:16px;height:16px;flex:none;color:var(--muted);display:flex}
+.row .lb{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row[aria-current="page"]{background:var(--brand-soft);color:var(--brand);font-weight:600}
+.row[aria-current="page"] .ic{color:var(--brand)}
+.pillnum{min-width:19px;border-radius:999px;padding:1px 6px;text-align:center;font-size:12px;font-weight:800;background:var(--field);color:var(--muted-strong)}
+.row[aria-current="page"] .pillnum{background:var(--card);color:var(--brand)}
+.pillnum.alert{background:var(--bad-bg);color:var(--bad-ink)}
+.rail-foot{padding:10px 14px 16px;font-size:12px;letter-spacing:.02em;color:var(--faint)}
+.top{position:sticky;top:0;z-index:30;height:46px;display:flex;align-items:center;gap:6px;background:var(--bg);
+  padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.top .grp{font-size:14px;color:var(--muted)}
+.top .slash{color:var(--line)}
+.top h1{font-size:14px;font-weight:400;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .sp{flex:1}
+.top .meta{font-size:12px;color:var(--muted);white-space:nowrap}
+.chip-demo{margin-left:8px;border-radius:4px;background:var(--warn-bg);color:var(--warn-ink);padding:2px 6px;font-weight:700}
+main{max-width:1280px;margin:0 auto;width:100%;min-width:0;padding-block:8px 64px;
+  padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.mnav{display:none}
+
+/* ── 부품 ── */
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.tab{position:relative;border:0;background:none;padding:8px 14px 10px;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--brand)}
+.tab[aria-selected="true"]::after{content:"";position:absolute;left:8px;right:8px;bottom:-1px;height:2.5px;border-radius:99px;background:var(--brand)}
+.tab .n{margin-left:6px;border-radius:999px;background:var(--field);padding:1px 6px;font-size:12px;font-weight:800;color:var(--muted-strong)}
+.lead{font-size:13px;color:var(--muted-strong);margin:0 0 14px;max-width:72ch}
+.lead b{color:var(--ink)}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.stat{border:1px solid var(--line);border-radius:6px;padding:10px 14px;background:var(--card);text-align:left}
+.stat .l{font-size:13px;font-weight:600;color:var(--muted-strong)}
+.stat .v{font-size:23px;font-weight:800;letter-spacing:-.01em;color:var(--ink);margin-top:2px}
+.stat .v.bad{color:var(--bad-ink)}
+.stat .h{font-size:12px;color:var(--muted);margin-top:1px}
+
+.card{border:1px solid var(--line);border-radius:6px;background:var(--card);padding:16px;margin-bottom:16px;min-width:0}
+.card-h{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.card-h h3{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;letter-spacing:-.01em;min-width:0}
+.card-h h3::before{content:"";width:6px;height:6px;border-radius:2px;background:var(--accent);flex:none}
+.card-h .sub{font-size:13px;font-weight:600;color:var(--muted)}
+.card-h .r{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.card.min .card-h{border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px}
+.card.min .card-h h3::before{display:none}
+.cols{display:grid;grid-template-columns:2fr 1fr;gap:16px;align-items:start}
+.cols > *{min-width:0}
+.cols.half{grid-template-columns:1fr 1fr}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;border-radius:6px;font-size:14px;font-weight:700;border:1px solid var(--line);background:var(--card);color:var(--muted-strong);cursor:pointer;white-space:nowrap;transition:.12s}
+.btn:hover{border-color:var(--brand);background:var(--field);color:var(--ink)}
+.btn.primary{border-color:transparent;background:var(--brand);color:#fff}
+.btn.primary:hover{background:var(--brand-dark)}
+.btn.danger{border-color:#E9C4C0;color:var(--bad-ink)}
+.btn.danger:hover{border-color:var(--bad);background:var(--bad-bg)}
+.btn.sm{height:28px;padding:0 10px;font-size:12px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.hstack{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+.tag{display:inline-block;white-space:nowrap;border-radius:5px;border:1px solid var(--line);padding:3px 8px;font-size:12px;font-weight:700;background:var(--card);color:var(--muted-strong)}
+.tag.good{border-color:var(--good);color:var(--good-ink)}
+.tag.warn{border-color:var(--warn-line);color:var(--warn-ink)}
+.tag.bad{border-color:var(--bad);color:var(--bad-ink)}
+.tag.info{border-color:var(--accent-line);color:var(--accent-ink)}
+.tag.soft{font-weight:400}
+
+.seg{display:inline-flex;gap:2px;border-radius:6px;background:var(--field);padding:3px}
+.seg button{border:0;background:none;border-radius:7px;padding:6px 14px;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--brand);box-shadow:0 1px 2px rgb(20 20 25/.08)}
+.seg.sm{padding:2px}.seg.sm button{padding:4px 10px;font-size:12px}
+
+.inp,.sel{height:32px;border:1px solid transparent;border-radius:6px;background:var(--field);padding:0 10px;font-size:14px;color:var(--ink);width:100%}
+.inp:focus,.sel:focus{outline:none;border-color:var(--brand);background:var(--card)}
+.inp::placeholder{color:var(--faint)}
+textarea.inp{height:auto;padding:8px 10px;min-height:90px;line-height:1.6;resize:vertical}
+.fl{display:flex;flex-direction:column;gap:5px}
+.fl > label{font-size:13px;font-weight:600;color:var(--muted-strong)}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:6px}
+table{width:100%;border-collapse:collapse;min-width:560px}
+thead tr{background:var(--accent-soft)}
+th{text-align:left;padding:8px 12px;font-size:13px;font-weight:600;color:var(--muted-strong);white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle;color:var(--body)}
+tbody tr:last-child td{border-bottom-color:transparent}
+tbody tr.hov:hover td{background:var(--field);border-bottom-color:var(--brand)}
+td.r,th.r{text-align:right}
+td b,td strong{color:var(--ink)}
+tr.off td{color:var(--muted)}
+tr.off td.nm{text-decoration:line-through}
+tr.sel-row td{background:var(--brand-soft)}
+tr.sub > td{background:var(--rail);padding:10px 12px 14px}
+td .inp,td .sel{height:28px;font-size:13px}
+input[type="checkbox"],input[type="radio"]{width:16px;height:16px;accent-color:var(--brand)}
+.empty{padding:36px;text-align:center;color:var(--muted)}
+
+.note{border:1px solid var(--line);border-radius:6px;padding:10px 12px;font-size:13px;color:var(--muted-strong);background:var(--rail)}
+.note b{color:var(--ink)}
+.note.bad{border-color:#E9C4C0;background:var(--bad-bg);color:var(--bad-ink)}
+.note.good{border-color:#BFE3CD;background:var(--good-bg);color:var(--good-ink)}
+.small{font-size:12px}.muted{color:var(--muted)}
+
+/* 그룹 기둥 (주소록) */
+.ab{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start}
+.ab > *{min-width:0}
+.gbox{border:1px solid var(--line);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:240px}
+.gtitle{font-size:12px;color:var(--muted);padding:2px 4px}
+.gitem{display:flex;align-items:center;gap:6px;border:0;background:none;padding:6px 8px;border-radius:6px;cursor:pointer;text-align:left;color:var(--ink);width:100%}
+.gitem:hover{background:var(--field)}
+.gitem[aria-current="true"]{background:var(--brand-soft);color:var(--brand);font-weight:600}
+.gitem .nm{flex:1;min-width:0;overflow-wrap:anywhere}
+.gitem .c{font-size:12px;font-weight:800;color:var(--muted-strong);background:var(--field);border-radius:999px;padding:1px 6px}
+.gitem[aria-current="true"] .c{background:var(--card);color:var(--brand)}
+.gadd{display:flex;gap:6px;border-top:1px solid var(--line);padding-top:10px;margin-top:auto}
+.bulk{display:flex;gap:8px;align-items:center;flex-wrap:wrap;border:1px solid var(--brand);background:var(--brand-soft);border-radius:6px;padding:7px 10px;margin-bottom:10px}
+.bulk b{color:var(--brand)}
+.bulk .sel{width:auto;height:28px;background:var(--card)}
+
+/* 템플릿 카드 */
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.tcard{text-align:left;border:1px solid var(--line);background:var(--card);border-radius:6px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:6px;min-width:0}
+.tcard:hover{border-color:var(--brand)}
+.tcard[aria-pressed="true"]{border-color:var(--brand);box-shadow:inset 0 0 0 1px var(--brand)}
+.tcard b{color:var(--ink)}
+.tsnip{font-size:12.5px;color:var(--muted-strong);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line}
+
+/* 메시지 작성 줄 (윙고 꼴, 택스팟 전송 화면) */
+.wline{display:grid;grid-template-columns:92px 1fr;gap:12px;padding:12px 0;border-bottom:1px solid var(--line-soft)}
+.wline:last-child{border-bottom:0}
+.wline > .k{font-size:13px;font-weight:700;color:var(--ink);padding-top:6px}
+.wline > div{min-width:0}
+.chk{display:inline-flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap}
+.chks{display:flex;flex-wrap:wrap;gap:8px 16px}
+.rcpt{display:flex;flex-wrap:wrap;gap:6px;max-height:120px;overflow:auto}
+.rcpt span{border:1px solid var(--line);border-radius:5px;padding:2px 8px;font-size:12px;background:var(--card)}
+
+/* 휴대폰 미리보기 — 택스팟 AlimtalkPage 의 그것 */
+.phone{margin:0 auto;width:270px;max-width:100%;border-radius:36px;border:3px solid #D9DCE3;background:#fff;padding:6px;box-shadow:0 1px 2px rgb(20 20 25/.05)}
+.screen{height:500px;display:flex;flex-direction:column;overflow:hidden;border-radius:30px;background:#B2C7DA}
+.screen .bar{display:flex;align-items:center;gap:8px;padding:12px 16px;font-size:13px;font-weight:700;color:#191919}
+.screen .scroll{flex:1;min-height:0;overflow-y:auto;padding:12px 12px 16px}
+.msg{position:relative;margin:0 8px 0 4px}
+.kakao{position:absolute;right:-8px;top:-12px;z-index:1;width:34px;height:34px;border-radius:50%;background:#4A3B32;color:#FEE500;font-size:7px;font-weight:900;display:grid;place-items:center;letter-spacing:-.02em}
+.mbox{overflow:hidden;border-radius:12px;background:#fff;box-shadow:0 1px 2px rgb(0 0 0/.06)}
+.mhead{background:#FEE500;padding:8px 12px;font-size:12.5px;font-weight:700;color:#3C1E1E}
+.mbody{white-space:pre-line;padding:10px 12px;font-size:12.5px;line-height:1.65;color:#191919;word-break:keep-all;overflow-wrap:anywhere}
+.mbody .v{background:#FFF3B0;border-radius:3px;padding:0 2px}
+.mbtn{margin:0 12px 12px;border-radius:6px;background:#F2F3F5;padding:6px;text-align:center;font-size:12.5px;color:#191919}
+.pcap{margin:12px 0 0;text-align:center;font-size:12px;color:var(--muted)}
+
+/* 거래처별 */
+.hgrid{display:grid;grid-template-columns:290px 1fr;gap:16px;align-items:start}
+.hgrid > *{min-width:0}
+.clist{display:flex;flex-direction:column;gap:1px;max-height:560px;overflow-y:auto}
+.citem{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;border:0;background:none;padding:8px 10px;border-radius:6px;cursor:pointer;color:var(--ink)}
+.citem:hover{background:var(--field)}
+.citem[aria-current="true"]{background:var(--brand-soft)}
+.hdetail{display:grid;grid-template-columns:1fr 290px;gap:16px;align-items:start}
+.hdetail > *{min-width:0}
+
+/* 카드 등록 */
+.cardvis{border-radius:10px;padding:16px;background:linear-gradient(135deg,#4F46E5,#2A2470);color:#fff;max-width:300px;aspect-ratio:1.6;display:flex;flex-direction:column;justify-content:space-between}
+.cardvis .n{font-variant-numeric:tabular-nums;letter-spacing:.12em;font-size:16px}
+.nocard{border:1.5px dashed var(--line);border-radius:10px;max-width:300px;aspect-ratio:1.6;display:grid;place-items:center;text-align:center;color:var(--muted);padding:16px}
+.tiers{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.tier{border:1px solid var(--line);border-radius:6px;padding:10px}
+.tier.on{border-color:var(--brand);background:var(--brand-soft)}
+.tier .t{font-size:12px;color:var(--muted-strong)}
+.tier .p{font-weight:800;color:var(--ink)}
+.tier.on .p{color:var(--brand)}
+
+.drop{border:1.5px dashed var(--line);border-radius:6px;padding:18px;text-align:center;color:var(--muted);cursor:pointer}
+.drop.over{border-color:var(--brand);background:var(--brand-soft)}
+.layer{position:fixed;inset:0;background:rgb(24 24 29/.4);display:grid;place-items:center;z-index:50;padding:16px}
+.modal{background:var(--card);border-radius:12px;max-width:480px;width:100%;padding:20px;display:flex;flex-direction:column;gap:14px;max-height:90vh;overflow:auto;box-shadow:0 6px 20px rgb(79 83 214/.10)}
+.modal h3{font-size:16px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:6px;z-index:60;font-size:13px;max-width:calc(100% - 32px)}
+.check-list{margin:0;padding-left:18px}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:var(--field);padding:1px 5px;border-radius:4px}
+
+@media (max-width:1100px){ .hdetail{grid-template-columns:1fr} }
+@media (max-width:1024px){ .cols,.cols.half{grid-template-columns:1fr} .stats{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:860px){ .ab,.hgrid{grid-template-columns:1fr} .clist{max-height:260px} .tiers{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:767px){
+  .app{grid-template-columns:1fr}
+  .rail{display:none}
+  .mnav{display:flex;gap:6px;overflow-x:auto;margin-bottom:14px}
+  .mnav button{white-space:nowrap;border:1px solid var(--line);background:var(--card);border-radius:6px;padding:6px 12px;font-size:13px;color:var(--ink);cursor:pointer}
+  .mnav button[aria-current="page"]{background:var(--brand-soft);border-color:var(--brand);color:var(--brand);font-weight:600}
+  .top,main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .top .meta{display:none}
+  .fgrid{grid-template-columns:1fr}
+  .wline{grid-template-columns:1fr;gap:4px}
+}
+@media (max-width:480px){ .stats{grid-template-columns:1fr} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* 관제탑 — 사무실 화면과 같은 얼굴, 왼쪽 기둥만 검정(택스팟 backboard/src/styles.css 와 같은 자) */
+:root{--rail:#1B1B21;--muted:#6B6B73}
+.rail{background:var(--rail);border-right:0;color:#fff}
+.rail-head{background:var(--rail)}
+.ct-name{font-size:14px;font-weight:700;letter-spacing:-.01em;color:#fff;white-space:nowrap}
+.ct-sub{margin-left:6px;font-size:12px;color:rgb(255 255 255/.45);white-space:nowrap}
+.rail .folder{color:rgb(255 255 255/.45)}
+.rail .sep{background:rgb(255 255 255/.1)}
+.rail .row{color:rgb(255 255 255/.7)}
+.rail .row:hover{background:rgb(255 255 255/.1)}
+.rail .row .ic{color:rgb(255 255 255/.45)}
+.rail .row[aria-current="page"]{background:rgb(255 255 255/.15);color:#fff;font-weight:600}
+.rail .row[aria-current="page"] .ic{color:#fff}
+.rail .pillnum{background:rgb(255 255 255/.12);color:#fff}
+.rail .pillnum.alert{background:var(--bad);color:#fff}
+.rail-foot{color:rgb(255 255 255/.45)}
+@media (max-width:767px){ .mnav button[aria-current="page"]{background:var(--ink);border-color:var(--ink);color:#fff} }
+.alerts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.alerts li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:10px;border-radius:6px;border:1px solid var(--line)}
+.sev{font-size:11px;font-weight:800;border-radius:4px;padding:1px 6px;white-space:nowrap;border:1px solid}
+.sev.p1{border-color:var(--bad);color:var(--bad-ink)}
+.sev.p2{border-color:var(--warn-line);color:var(--warn-ink);background:var(--warn-bg)}
+.sev.p3{border-color:var(--line);color:var(--muted-strong)}
+.alerts .t{font-size:13px;color:var(--ink);min-width:0}
+.alerts .t small{display:block;color:var(--muted);font-size:12px}
+.todo{list-style:none;margin:0;padding:0}
+.todo li{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line-soft);font-size:13px}
+.todo li:last-child{border-bottom:0}
+.todo b{color:var(--ink)}
+.flow{list-style:none;margin:0;padding:0;display:grid;gap:10px;counter-reset:s}
+.flow li{display:grid;grid-template-columns:26px 1fr;gap:10px;counter-increment:s}
+.flow li::before{content:counter(s);width:22px;height:22px;border-radius:50%;border:1px solid var(--line);color:var(--muted-strong);display:grid;place-items:center;font-weight:700;font-size:12px}
+.flow b{display:block;color:var(--ink)}
+.flow span{color:var(--muted-strong);font-size:13px}
+.trow{cursor:pointer}
+
+/* ── 윙고 꼴 화면용 ── */
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.filters .inp,.filters .sel{width:auto}
+.tree{display:flex;flex-direction:column;gap:1px}
+.tree .sub-g{padding-left:14px}
+.tree .gitem.child{font-size:13px;color:var(--body);padding:4px 8px}
+.quick{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr) auto;gap:8px;align-items:end;padding:12px;border:1px solid var(--line);border-radius:6px;background:var(--rail);margin-bottom:12px}
+.app .quick{background:#F7F7F9}
+.quick .fl > label{font-size:12px}
+.fchips{display:flex;gap:6px;flex-wrap:wrap}
+.fchip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;color:var(--muted-strong);cursor:pointer}
+.fchip[aria-pressed="true"]{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
+.btnrow{display:flex;flex-direction:column;gap:6px}
+.btnrow .hstack{flex-wrap:nowrap}
+.btnrow .sel{width:110px;flex:none}
+.cnt{font-size:12px;color:var(--muted);text-align:right;margin-top:4px}
+.cnt.over{color:var(--bad-ink);font-weight:700}
+.adline{margin:0 0 4px 4px;font-size:11px;color:#4A5563}
+.optline{margin-top:4px;text-align:right;font-size:11px;color:#4A5563}
+.mimg{display:flex;align-items:center;justify-content:center;background:#EEF1F5;color:#8A94A3;font-size:12px;aspect-ratio:2/1;overflow:hidden}
+.mimg.wide{aspect-ratio:4/3}
+.mimg img{width:100%;height:100%;object-fit:cover;display:block}
+.memph{padding:10px 12px 0;font-size:11px;color:#8A94A3}
+.memph b{display:block;font-size:17px;color:#191919;font-weight:800;line-height:1.3}
+.mbtns{display:flex;flex-direction:column;gap:6px;padding:0 12px 12px}
+.mbtns div{border-radius:6px;background:#F2F3F5;padding:6px;text-align:center;font-size:12.5px;color:#191919}
+.picked{display:flex;flex-wrap:wrap;gap:6px;max-height:140px;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:44px}
+.picked span{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:5px;padding:2px 4px 2px 8px;font-size:12px;background:var(--card)}
+.picked span span{border:0;padding:0;background:none}
+.picked span button{border:0;background:none;color:var(--muted);cursor:pointer;padding:0 4px;border-radius:4px}
+.picked span button:hover{background:var(--field);color:var(--bad-ink)}
+.selbar{position:sticky;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:5;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--brand);background:var(--card);border-radius:6px;padding:8px 12px;margin-top:12px;box-shadow:0 6px 20px rgb(79 83 214/.10)}
+.selbar b{color:var(--brand)}
+@media (max-width:860px){ .quick{grid-template-columns:1fr 1fr} }
+
+/* 예약내역 안내 */
+.rnotes{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;color:var(--ink);font-size:14px}
+.rnotes li::marker{color:var(--ink)}
+.filters .srch .inp#rf-q{height:32px;background:var(--field);border-color:transparent}
+/* 채널명 칸 — @ 가 세로로 한 줄에 서게 왼쪽 정렬 */
+.ctable th.chcol-h,.ctable td.chcell{text-align:left;width:230px;min-width:230px;padding-left:20px;white-space:nowrap}
+/* 전송내역 표 */
+.ctable th,.ctable td{text-align:center}
+.ctable td.ttl{text-align:left;max-width:240px}
+.tlink{border:0;background:none;padding:0;font:inherit;color:var(--brand);cursor:pointer;text-decoration:underline;text-underline-offset:3px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;text-align:left}
+.tlink:hover{color:var(--brand-dark)}
+.nowrap{white-space:nowrap}
+.pdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--brand);margin-right:5px;vertical-align:middle}
+.pdot.run{background:var(--warn)}
+.filters .srch .inp{width:100%}
+.datebox input::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.datebox{position:relative;display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 10px;border-radius:6px;background:var(--field);color:var(--ink);cursor:pointer}
+.datebox input{border:0;background:none;font:inherit;color:var(--ink);font-variant-numeric:tabular-nums;width:128px}
+.datebox input:focus{outline:none}
+.datebox:focus-within{box-shadow:0 0 0 1px var(--brand)}
+.srch .inp#hf-q{height:32px;background:var(--field);border-color:transparent}
+/* ── 채널 관리 ── */
+.chwrap{background:#F7F7F9;border:1px solid var(--line);border-radius:6px;padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:420px}
+.chcol{min-width:0;display:flex;flex-direction:column;gap:12px;padding:0 20px}
+.chcol:first-child{padding-left:0;border-right:1px solid var(--line)}
+.chcol:last-child{padding-right:0}
+.chhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chhead h3{font-size:17px;font-weight:800;margin-right:auto;display:flex;align-items:center;gap:6px}
+.qmark{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--muted);color:var(--muted);font-size:11px;font-weight:800;display:inline-grid;place-items:center;cursor:pointer;background:none;padding:0}
+.srch{position:relative}
+.srch svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.srch .inp{padding-left:34px;background:var(--card);border-color:var(--line);height:38px}
+.chlist{display:flex;flex-direction:column;gap:10px}
+.chcol > *{flex-shrink:0}
+.chlist > *{flex-shrink:0}
+.chcard{position:relative;display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 8px 10px 12px;box-shadow:0 1px 2px rgb(20 20 25/.05);text-align:left;width:100%;color:inherit;font:inherit}
+.chcard.on{border-color:var(--brand);box-shadow:inset 0 0 0 1px var(--brand)}
+button.chcard{cursor:pointer}
+.chcard .at{color:var(--faint);font-weight:700;width:18px;text-align:center;flex:none}
+.chcard .fold{color:var(--brand);flex:none;display:flex}
+.chcard .tx{flex:1;min-width:0}
+.chcard .tx b{display:block;color:var(--ink);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chcard .tx span{font-size:12px;color:var(--muted)}
+.kebab{border:0;background:none;width:28px;height:28px;border-radius:6px;cursor:pointer;color:var(--muted-strong);display:grid;place-items:center;flex:none}
+.kebab:hover{background:var(--field)}
+.menu{position:absolute;right:8px;top:40px;z-index:20;background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 20px rgb(20 20 25/.12);padding:4px;min-width:150px;display:flex;flex-direction:column}
+.menu button{border:0;background:none;text-align:left;padding:7px 10px;border-radius:6px;font-size:13px;cursor:pointer;color:var(--ink)}
+.menu button:hover{background:var(--field)}
+.menu button.danger{color:var(--bad-ink)}
+.badge-dot{position:absolute;top:-8px;right:-8px;min-width:20px;height:20px;border-radius:999px;background:#E5211B;color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;padding:0 5px}
+.relbtn{position:relative}
+.members{border-top:1px dashed var(--line);padding-top:12px;display:flex;flex-direction:column;gap:6px}
+.members .row2{display:flex;align-items:center;gap:8px;font-size:13px;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 8px 6px 10px}
+.members .row2 b{color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:860px){ .chwrap{grid-template-columns:1fr;gap:20px} .chcol{padding:0} .chcol:first-child{border-right:0;border-bottom:1px solid var(--line);padding-bottom:20px} }
+
+
+/* 관제탑: 내용을 감싸는 상자 없이 — 표 · 목록의 테두리만 남긴다 */
+.card{border:0;background:none;padding:0;margin-bottom:28px;border-radius:0}
+.chwrap{background:none;border:0;padding:0}
+.note{background:#F7F7F9}
+.note.bad{background:var(--bad-bg)}
+.note.good{background:var(--good-bg)}
+tr.sub > td{background:#F7F7F9}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail" aria-label="관제탑 메뉴">
+    <div class="rail-head"><span class="ct-name">알림톡 관제탑</span><span class="ct-sub">운영사 전용</span></div>
+    <div class="rail-body" id="nav"></div>
+  </aside>
+  <div style="min-width:0">
+    <header class="top">
+      <span class="grp" id="crumb-g"></span><span class="slash" id="crumb-s">›</span>
+      <h1 id="crumb-t"></h1>
+      <span class="sp"></span>
+      <span class="meta">운영 관리자<span class="chip-demo">프로토타입 · 예시 자료</span></span>
+    </header>
+    <main><div class="mnav" id="mnav"></div><div id="main"></div></main>
+  </div>
+</div>
+<div id="layer"></div>
+
+<script>
+const IC={
+  home:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+  building:'<path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9v.01M9 12v.01M9 15v.01M9 18v.01"/>',
+  chat:'<path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/>',
+  star:'<path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3-5.8 3 1.1-6.5L2.6 9.4l6.5-.9z"/>',
+  calendar:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  user:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  send:'<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/>',
+  chart:'<path d="M18 20V10M12 20V4M6 20v-6"/>',
+  check:'<path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="M22 4L12 14l-3-3"/>',
+  inbox:'<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.4 5.1L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.4-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.8 1.1z"/>',
+  bill:'<path d="M5 3v18l2.5-1.6L10 21l2-1.6L14 21l2.5-1.6L19 21V3z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+  gear:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M1 14h6M9 8h6M17 16h6"/>'
+};
+const icon=n=>`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
+
+/* ───────── 예시 자료 ───────── */
+const OPS={name:'세무사 알림톡',channel:'@세무사알림톡',phone:'1588-0000',optout:'080-123-4567'};
+const S={
+  view:'home',
+  tiers:[{max:100,price:30000},{max:300,price:50000},{max:500,price:70000},{max:null,price:90000}],
+  billDay:5, schedule:{day:'화',time:'10:00'},
+  issue:{no:46,title:'11월 2주차 세무일정',body:'· 11/10(화) 10월분 원천세 신고·납부\n· 11/30(월) 종합소득세 중간예납 납부 (고지분)\n\n[경영정보] 연말정산 대비, 올해 남은 두 달 안에 챙길 공제 항목을 정리했습니다.'},
+  offices:[
+    {id:1,name:'정훈세무회계',owner:'김정훈',phone:'063-271-0000',channel:'@정훈세무회계',sender:'연결됨',card:{brand:'신한',last4:'4417'},bill:'정상',count:11,fb:0,joined:'2026-08-01',groups:['기장고객','신고대리','해지예정']},
+    {id:2,name:'한빛세무사무소',owner:'이한빛',phone:'063-222-0000',channel:'@한빛세무',sender:'연결됨',card:{brand:'국민',last4:'0921'},bill:'정상',count:214,fb:6,joined:'2026-08-14',groups:['법인','개인','VIP']},
+    {id:3,name:'바른세무회계',owner:'최바른',phone:'02-555-0000',channel:'@바른세무회계',sender:'연결됨',card:{brand:'현대',last4:'3308'},bill:'실패',count:387,fb:21,joined:'2026-09-02',groups:['기장','신고']},
+    {id:4,name:'새봄세무사사무소',owner:'정새봄',phone:'031-777-0000',channel:'@새봄세무',sender:'연동대기',card:null,bill:'미등록',count:58,fb:0,joined:'2026-10-28',groups:['고객']},
+    {id:5,name:'다온세무법인 전주',owner:'윤다온',phone:'063-288-0000',channel:'@다온세무전주',sender:'연결됨',card:{brand:'삼성',last4:'7752'},bill:'정상',count:612,fb:14,joined:'2026-09-20',groups:['제조업','음식점','도소매','기타']}
+  ],
+  /* 알림톡 템플릿 — 채널 그룹에 등록, 카카오 검수 필요 */
+  alim:[
+    {id:1,code:'TAX_WEEKLY_01',name:'주간 세무일정 안내',category:'공지/안내',msgType:'채널추가형',kind:'선택 안 함',regAt:'2026-08-18',status:'승인',approvedAt:'2026-08-20',fallback:true,
+     body:'[#{세무사명}] 이번 주 세무일정 안내\n\n안녕하세요, #{고객명} 대표님.\n#{세무사명}입니다.\n\n#{회차제목} 안내를 준비했습니다.\n이번 주 챙기셔야 할 신고·납부 일정과 경영정보를 아래 버튼에서 확인해 주세요.\n\n문의: #{사무실전화}',buttons:['이번 주 일정 확인하기']},
+    {id:2,code:'TAX_VAT_01',name:'부가가치세 신고 자료 요청',category:'업무 요청',msgType:'부가정보형',extra:'자료가 없으시면 「없음」이라고 답장해 주세요.',kind:'선택 안 함',regAt:'2026-06-09',status:'승인',approvedAt:'2026-06-11',fallback:true,
+     body:'[#{세무사명}] 부가가치세 신고 자료 요청\n\n#{고객명} 대표님, #{신고기간} 부가가치세 신고를 준비하고 있습니다.\n\n매출·매입 자료(카드전표, 현금영수증, 세금계산서 외 증빙)를 #{제출기한}까지 보내주세요.\n\n문의: #{사무실전화}',buttons:['제출 자료 목록 보기']},
+    {id:3,code:'TAX_INC_01',name:'종합소득세 신고 안내',category:'공지/안내',msgType:'기본형',kind:'강조표기형',regAt:'2026-04-20',emph:'5월 31일',emphSub:'종합소득세 신고기한',status:'승인',approvedAt:'2026-04-22',fallback:true,
+     body:'[#{세무사명}] 종합소득세 신고 안내\n\n#{고객명} 대표님, #{귀속연도}년 귀속 종합소득세 신고기한은 5월 31일입니다.\n\n신고에 필요한 자료를 아래 버튼에서 확인해 주세요.\n\n문의: #{사무실전화}',buttons:['필요 자료 확인하기']},
+    {id:4,code:'TAX_YE_01',name:'연말정산 자료 제출 요청',category:'업무 요청',msgType:'기본형',kind:'선택 안 함',regAt:'2026-10-28',status:'승인',approvedAt:'2026-10-30',fallback:true,
+     body:'[#{세무사명}] 연말정산 자료 제출 요청\n\n#{고객명} 대표님, 직원분들의 연말정산 자료를 #{제출기한}까지 보내주세요.\n\n제출 목록은 아래 버튼에서 확인할 수 있습니다.\n\n문의: #{사무실전화}',buttons:['제출 목록 보기']},
+    {id:5,code:'TAX_FEE_01',name:'기장료 납부 안내',category:'청구/결제',msgType:'기본형',kind:'선택 안 함',regAt:'2026-10-31',status:'검수중',approvedAt:null,fallback:true,
+     body:'[#{세무사명}] #{청구월} 기장료 안내\n\n#{고객명} 대표님, #{청구월} 기장료 #{청구금액}이 #{출금일}에 등록 계좌에서 출금됩니다.\n\n문의: #{사무실전화}',buttons:['청구 내역 보기']},
+    {id:6,code:'TAX_HOL_01',name:'명절 휴무 안내',category:'공지/안내',msgType:'기본형',kind:'이미지형',regAt:'2026-09-10',status:'반려',approvedAt:null,fallback:false,reject:'인사 · 축하 문구가 중심이라 정보성 메시지로 보기 어렵다는 사유',
+     body:'[#{세무사명}] 추석 연휴 휴무 안내\n\n#{고객명} 대표님, 풍성한 한가위 보내세요.\n#{휴무기간} 동안 사무실이 쉽니다.',buttons:['사무실 안내 보기']}
+  ].map(t=>({...t,approved:t.status==='승인'?{body:t.body,buttons:[...t.buttons],kind:t.kind,emph:t.emph,emphSub:t.emphSub,msgType:t.msgType,extra:t.extra,img:t.img}:null})),
+  /* 브랜드메시지 — 광고 메시지. (광고) 표시 · 수신거부 안내가 붙는다 */
+  brand:[
+    {id:101,name:'연말정산 대비 절세 상담 이벤트',type:'이미지형',img:null,saved:'2026-10-29',
+     body:'올해가 가기 전에 챙기면 좋은 절세 포인트, #{세무사명}에서 무료로 점검해 드립니다.\n\n· 11월 한 달 상담 무료\n· 개인사업자 · 법인 모두 가능',buttons:['상담 신청하기','절세 포인트 보기']},
+    {id:102,name:'세무사 알림톡 서비스 소개',type:'텍스트형',img:null,saved:'2026-09-15',
+     body:'고객님께 매주 세무일정을 자동으로 보내 드리는 세무사 알림톡을 소개합니다.\n주소록만 올리시면 나머지는 저절로 됩니다.',buttons:['서비스 알아보기']}
+  ],
+  weeklyTid:1, aSel:1, bSel:101, nextTid:20, pvOffice:1,
+  /* 주소록 */
+  af:{oid:'all',gname:null,q:'',hideOpt:false}, pick:new Set(), nextCid:1000,
+  send:{kind:'alim',tid:null,bid:null,vars:{},when:'now',at:'',fallback:true,channel:'office',manual:'',checked:false,armed:false},
+  /* 전송결과 */
+  pf:{month:'전체',st:'전체',oid:'전체'}, rf:{from:'2026-11-03',to:'2027-02-03',q:''}, rOpen:null, batches:[], hf:{from:'2026-08-03',to:'2026-11-03',kind:'전체',q:''}, bOpen:null, rFilter:'전체'
+};
+
+/* 세무사별 예시 주소록 — 실서버에서는 각 세무사가 세무사 화면에서 올린 주소록 */
+const SUR='김이박최정강조윤장임한오서신권황안송류홍'.split('');
+const GIV=['민준','서연','도윤','하은','지호','수아','예준','지유','시우','채원','주원','다은','하준','윤서','건우','소율','현우','지민','우진','서윤','선우','민서','연우','하린'];
+const BIZ=['인테리어','꽃집','테크','약국','정비','필라테스','푸드','베이커리','네일','건설','스튜디오','물류','카페','치과','마트','안경','공방','부동산','학원','식당'];
+S.contacts=[];
+(()=>{let k=0;const per={1:12,2:14,3:10,4:6,5:16};
+  S.offices.forEach(o=>{for(let i=0;i<per[o.id];i++){k++;const nm=SUR[(k*7)%SUR.length]+GIV[(k*5)%GIV.length];
+    const ph=`010-${String(2000+(k*397)%7999).padStart(4,'0')}-${String(1000+(k*733)%8999).padStart(4,'0')}`;
+    S.contacts.push({id:k,oid:o.id,name:nm,phone:ph,biz:nm.slice(1)+BIZ[(k*3)%BIZ.length],gname:o.groups[i%o.groups.length],optout:k%9===0,adOk:k%4!==0});}});})();
+
+const won=n=>n.toLocaleString('ko-KR')+'원';
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const tierOf=n=>S.tiers.findIndex(t=>t.max===null||n<=t.max);
+const tierLabel=i=>{const t=S.tiers[i],p=S.tiers[i-1];return t.max===null?`${p.max+1}명 이상`:(p?`${p.max+1}~${t.max}명`:`${t.max}명 이하`);};
+const office=id=>S.offices.find(o=>o.id===id);
+const alim=id=>S.alim.find(t=>t.id===id);
+const brand=id=>S.brand.find(t=>t.id===id);
+const AUTO_VARS=['세무사명','고객명','상호','회차제목','사무실전화'];
+const varsOf=b=>[...new Set([...String(b).matchAll(/#\{(.+?)\}/g)].map(m=>m[1]))];
+const extraVars=b=>varsOf(b).filter(v=>!AUTO_VARS.includes(v));
+const tag=(t,tone='',soft)=>`<span class="tag ${tone}${soft?' soft':''}">${esc(t)}</span>`;
+const stTag=s=>tag(s,{승인:'good',정상:'good',연결됨:'good',성공:'good','사용 가능':'good',검수중:'warn',수정중:'warn',연동대기:'warn',대체:'warn',예약됨:'warn',실패:'bad',반려:'bad'}[s]||'');
+const normPhone=p=>{const d=String(p).replace(/\D/g,'');if(!/^01[016789]\d{7,8}$/.test(d))return null;return d.length===11?`${d.slice(0,3)}-${d.slice(3,7)}-${d.slice(7)}`:`${d.slice(0,3)}-${d.slice(3,6)}-${d.slice(6)}`;};
+const live=()=>S.offices.filter(o=>o.sender==='연결됨'&&o.bill==='정상');
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2600);}
+const pad=n=>String(n).padStart(2,'0');
+const nowStr=()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;};
+
+/* ───────── 휴대폰 미리보기 (택스팟 휴대폰미리보기와 같은 꼴) ───────── */
+function fill(body,o,c,extra={}){
+  const cc=c||{name:'박성민',biz:'성민인테리어'};
+  const vals={'세무사명':o.name,'고객명':cc.name,'상호':cc.biz,'회차제목':S.issue.title,'사무실전화':o.phone,...extra};
+  return esc(body).replace(/#\{(.+?)\}/g,(m,k)=>`<span class="v">${esc(vals[k]||m)}</span>`);
+}
+function phone(m,o,c,extra,cap){
+  const isBrand=m&&m.type!==undefined;
+  let inner='';
+  if(!m) inner=`<div class="mbox"><div class="mbody"><span style="color:#9AA3AE">템플릿을 고르면 내용이 여기에 보입니다.</span></div></div>`;
+  else if(isBrand) inner=`<div class="adline">(광고) ${esc(o.channel)}</div><div class="mbox">
+      ${m.type!=='텍스트형'?`<div class="mimg ${m.type==='와이드형'?'wide':''}">${m.img?`<img src="${m.img}" alt="">`:'이미지를 올려 주세요'}</div>`:''}
+      <div class="mbody">${fill(m.body,o,c,extra)}</div>${m.buttons.filter(Boolean).length?`<div class="mbtns">${m.buttons.filter(Boolean).map(b=>`<div>${esc(b)}</div>`).join('')}</div>`:''}</div>
+      <div class="optline">수신거부 | 홈 &gt; 채널차단</div>`;
+  else inner=`<span class="kakao">KAKAO</span><div class="mbox"><div class="mhead">알림톡 도착</div>
+      ${m.kind==='이미지형'?`<div class="mimg">${m.img?`<img src="${m.img}" alt="">`:'검수받을 이미지'}</div>`:''}
+      ${m.kind==='강조표기형'?`<div class="memph">${esc(m.emphSub||'보조 문구')}<b>${esc(m.emph||'강조 타이틀')}</b></div>`:''}
+      <div class="mbody">${fill(m.body,o,c,extra)}${['부가정보형','복합형'].includes(m.msgType)&&m.extra?`<div style="margin-top:10px;color:#8A94A3;font-size:12px">${esc(m.extra)}</div>`:''}</div>
+      ${(()=>{const bs=[...m.buttons.filter(Boolean),...(['채널추가형','복합형'].includes(m.msgType)?['채널 추가']:[])];return bs.length?`<div class="mbtns">${bs.map(b=>`<div>${esc(b)}</div>`).join('')}</div>`:''})()}</div>`;
+  return `<div class="phone"><div class="screen"><div class="bar"><span style="font-size:16px;line-height:1">‹</span> ${esc(o.channel)}</div>
+    <div class="scroll"><div class="msg">${inner}</div></div></div></div><p class="pcap">${cap||'단말기 설정에 따라 다르게 보일 수 있습니다'}</p>`;
+}
+
+/* ───────── 메뉴 ───────── */
+/* 한 번의 전송이 여러 채널로 나가면 채널마다 한 줄씩 — 윙고 전송결과와 같은 꼴 */
+function logCh(b,l){if(b.channels&&b.channels.length===1)return b.channels[0];if(b.kind==='brand')return OPS.channel;
+  return S.offices.find(o=>o.name===l.office&&o.sender==='연결됨')?.channel||OPS.channel;}
+function splitRows(b){const m=new Map();b.logs.forEach(l=>{const ch=logCh(b,l);if(!m.has(ch))m.set(ch,[]);m.get(ch).push(l);});
+  return [...m].map(([ch,logs])=>({...b,id:b.id+'|'+ch,bid:b.id,channels:[ch],logs,offices:[...new Set(logs.map(l=>l.office))]}));}
+const findRow=id=>S.batches.flatMap(splitRows).find(r=>r.id===id);
+const reservedOpen=()=>S.batches.filter(b=>b.reserved&&!b.cancelled).flatMap(splitRows);
+const NAV=[
+  {items:[{k:'home',l:'홈',ic:'home',n:()=>alerts().filter(a=>a.p==='P1').length,alert:true}]},
+  {title:'가입고객관리',items:[{k:'offices',l:'가입고객현황',ic:'building',n:()=>S.offices.length},{k:'channels',l:'채널 관리',ic:'chat'}]},
+  {title:'템플릿 관리',items:[
+    {k:'t-alim',l:'알림톡 템플릿',ic:'chat',n:()=>S.alim.filter(t=>t.status==='검수중').length},
+    {k:'t-brand',l:'브랜드 템플릿',ic:'star'}]},
+  {title:'주소록',items:[
+    {k:'taxbook',l:'가입자 주소록',ic:'building',n:()=>S.tax.length},
+    {k:'book',l:'세무사별 주소록',ic:'user',n:()=>S.contacts.length},
+    {k:'send',l:'카카오톡 전송',ic:'send',n:()=>S.pick.size}]},
+  {title:'전송결과',items:[
+    {k:'sent',l:'전송내역',ic:'check'},
+    {k:'reserved',l:'예약내역',ic:'inbox',n:()=>reservedOpen().length}]},
+  {title:'결제내역관리',items:[{k:'fees',l:'알림톡 요금표',ic:'chart'},{k:'billing',l:'결제내역',ic:'bill',n:()=>S.offices.filter(o=>o.bill==='실패').length,alert:true}]},
+  {title:'내부자료관리',items:[{k:'flow',l:'연동 구조',ic:'gear'}]}
+];
+function renderNav(){
+  document.getElementById('nav').innerHTML=NAV.map((g,gi)=>`${gi?'<div class="sep"></div>':''}${g.title?`<div class="folder">${g.title}</div>`:''}`+
+    g.items.map(it=>{const n=it.n?.();return `<button class="row" data-go="${it.k}" ${S.view===it.k?'aria-current="page"':''}><span class="ic">${icon(it.ic)}</span><span class="lb">${it.l}</span>${n?`<span class="pillnum ${it.alert?'alert':''} tnum">${n}</span>`:''}</button>`}).join('')).join('')+
+    `<div class="rail-foot">세무사 화면과 분리된 운영사 전용 사이트입니다.<br>주소록 열람과 전송은 운영 기록에 남습니다.</div>`;
+  const all=NAV.flatMap(g=>g.items);
+  document.getElementById('mnav').innerHTML=all.map(it=>`<button data-go="${it.k}" ${S.view===it.k?'aria-current="page"':''}>${it.l}</button>`).join('');
+  const g=NAV.find(x=>x.items.some(i=>i.k===S.view))?.title||'';
+  document.getElementById('crumb-g').textContent=g;document.getElementById('crumb-s').hidden=!g;
+  document.getElementById('crumb-t').textContent=all.find(i=>i.k===S.view).l;
+}
+
+/* ───────── 홈 ───────── */
+function alerts(){
+  const a=[];
+  S.offices.filter(o=>o.bill==='실패').forEach(o=>a.push({p:'P1',t:`${o.name} 이용료 결제 실패`,s:`${won(S.tiers[tierOf(o.count)].price)} · 3일 뒤 자동 재시도 · 7일 지나면 발송 멈춤`,go:'billing'}));
+  S.offices.filter(o=>o.sender!=='연결됨').forEach(o=>a.push({p:'P2',t:`${o.name} 카카오 채널 연동 대기`,s:'채널 인증이 끝나야 이번 주 발송에 들어갑니다',go:'offices'}));
+  S.alim.filter(t=>t.status==='검수중').forEach(t=>a.push({p:'P2',t:`「${t.name}」 카카오 검수 중`,s:'영업일 1~3일 · 승인되면 세무사 화면에 저절로 올라갑니다',go:'t-alim'}));
+  S.alim.filter(t=>t.status==='반려').forEach(t=>a.push({p:'P3',t:`「${t.name}」 검수 반려`,s:t.reject||'',go:'t-alim'}));
+  const lastFail=S.batches.filter(b=>!b.reserved).flatMap(b=>b.logs).filter(l=>l.result==='실패').length;
+  if(lastFail) a.push({p:'P3',t:`최근 전송 실패 ${lastFail}건`,s:'번호 오류 · 수신 차단 · 카카오톡 미사용(대체문자 끔)',go:'sent'});
+  return a;
+}
+function vHome(){
+  const tot=live().reduce((s,o)=>s+o.count,0),mrr=S.offices.reduce((s,o)=>s+(o.card?S.tiers[tierOf(o.count)].price:0),0),al=alerts(),w=alim(S.weeklyTid);
+  return `<div class="stats">
+    <div class="stat"><div class="l">이번 주 발송 예정</div><div class="v tnum">${tot.toLocaleString()}건</div><div class="h">${S.schedule.day}요일 ${S.schedule.time} · 세무사 ${live().length}곳</div></div>
+    <div class="stat"><div class="l">가입 세무사</div><div class="v tnum">${S.offices.length}곳</div><div class="h">채널 연결 ${S.offices.filter(o=>o.sender==='연결됨').length} · 카드 등록 ${S.offices.filter(o=>o.card).length}</div></div>
+    <div class="stat"><div class="l">이번 달 청구 예정</div><div class="v tnum">${won(mrr)}</div><div class="h">매월 ${S.billDay}일 자동결제</div></div>
+    <div class="stat"><div class="l">확인 필요</div><div class="v tnum ${al.some(a=>a.p==='P1')?'bad':''}">${al.length}건</div><div class="h">급함 ${al.filter(a=>a.p==='P1').length}건</div></div>
+  </div>
+  <div class="cols">
+    <section class="card"><div class="card-h"><h3>경보</h3><span class="sub">급한 순 · ${al.length}건</span></div>
+      <ul class="alerts">${al.map(a=>`<li><span class="sev ${a.p.toLowerCase()}">${a.p}</span><span class="t">${esc(a.t)}<small>${esc(a.s)}</small></span><button class="btn sm" data-go="${a.go}">보기 ›</button></li>`).join('')||'<li><span class="t">확인할 것이 없습니다.</span></li>'}</ul></section>
+    <section class="card"><div class="card-h"><h3>이번 주 운영 할 일</h3></div>
+      <ul class="todo">
+        <li><span>매주 발송 템플릿</span><b>${esc(w.name)}</b></li>
+        <li><span>예약된 전송</span><button class="btn sm" data-go="reserved">${reservedOpen().length}건 ›</button></li>
+        <li><span>검수 중 알림톡</span><b class="tnum">${S.alim.filter(t=>t.status==='검수중').length}건</b></li>
+        <li><span>결제 실패</span><b class="tnum" style="color:var(--bad-ink)">${S.offices.filter(o=>o.bill==='실패').length}곳</b></li>
+      </ul></section>
+  </div>`;
+}
+
+/* ───────── 가입고객현황 ───────── */
+function vOffices(){
+  return `<section class="card"><div class="card-h"><h3>가입 세무사</h3><span class="sub tnum">${S.offices.length}곳</span><span class="r"><button class="btn primary" id="invite">세무사 초대</button></span></div>
+  <div class="tw"><table>
+    <thead><tr><th>세무사</th><th>카카오 채널</th><th>채널 연동</th><th class="r">주소록</th><th>요금 구간</th><th>카드</th><th>결제</th><th class="r"></th></tr></thead>
+    <tbody>${S.offices.map(o=>{const ti=tierOf(o.count);return `<tr class="hov"><td><b>${esc(o.name)}</b><div class="small muted">${esc(o.owner)} 세무사 · 가입 ${o.joined}</div></td><td class="tnum">${esc(o.channel)}</td><td>${stTag(o.sender)}</td>
+      <td class="r tnum">${o.count}</td><td class="tnum">${won(S.tiers[ti].price)} <span class="small muted">${tierLabel(ti)}</span></td><td>${o.card?esc(o.card.brand)+' ··'+esc(o.card.last4):'<span class="muted">없음</span>'}</td><td>${stTag(o.bill)}</td>
+      <td class="r"><button class="btn sm" data-book="${o.id}">주소록 ›</button></td></tr>`}).join('')}</tbody></table></div></section>`;
+}
+
+/* ───────── 템플릿 관리 › 카카오 알림톡 (윙고: 신규등록 → 검수요청) ───────── */
+function vTAlim(){
+  const t=alim(S.aSel),o=office(S.pvOffice),canReq=['수정중','작성중','반려'].includes(t.status),locked=t.status==='승인';
+  return `<section class="card"><div class="card-h"><h3>알림톡 템플릿</h3><span class="sub tnum">${S.alim.length}개</span><span class="r"><button class="btn primary" id="new-alim">신규등록</button></span></div>
+  <div class="tw"><table>
+    <thead><tr><th>템플릿명</th><th>메시지 유형</th><th>강조 유형</th><th>등록 상태</th><th>등록일자</th></tr></thead>
+    <tbody>${S.alim.map(x=>`<tr class="hov trow ${x.id===S.aSel?'sel-row':''}" data-asel="${x.id}" tabindex="0">
+      <td><b>${esc(x.name||'(이름 없음)')}</b>${x.id===S.weeklyTid?' '+tag('매주 자동','info'):''}<div class="small muted tnum">${esc(x.code)}</div></td><td>${esc(x.msgType)}</td><td>${esc(x.kind)}</td><td>${stTag(x.status)}</td>
+      <td class="tnum">${x.regAt||'<span style="color:var(--faint)">—</span>'}</td></tr>`).join('')}</tbody></table></div></section>
+  <div class="cols">
+    <section class="card min"><div class="card-h"><h3>${esc(t.name||'새 템플릿')}</h3>${stTag(t.status)}
+      <span class="r">${locked?`<button class="btn sm" id="copy-alim">복사해서 새로 등록</button>${t.id!==S.weeklyTid?'<button class="btn sm" id="set-weekly">매주 발송용으로 지정</button>':''}`
+        :`<button class="btn sm primary" id="req-review" ${canReq?'':'disabled'}>검수요청</button>${t.status==='검수중'?'<button class="btn sm" id="approve">승인 (데모)</button><button class="btn sm danger" id="reject">반려 (데모)</button>':''}`}</span></div>
+      ${t.status==='반려'&&t.reject?`<div class="note bad" style="margin-bottom:8px">반려 사유: ${esc(t.reject)}</div>`:''}
+      ${locked?`<div class="note" style="margin-bottom:8px">승인된 템플릿은 고칠 수 없습니다. 바꾸려면 「복사해서 새로 등록」을 누르세요.</div>`:''}
+      <fieldset ${locked?'disabled':''} style="border:0;margin:0;padding:0;min-width:0">
+      <div class="wline"><div class="k">채널 그룹</div><div><select class="sel" disabled><option>세무사 알림톡 그룹 · 채널 ${S.offices.filter(x=>x.sender==='연결됨').length}개</option></select></div></div>
+      <div class="wline"><div class="k">템플릿명</div><div><input id="a-name" class="inp" value="${esc(t.name)}" maxlength="30" placeholder="같은 그룹 안에서 겹치지 않게"></div></div>
+      <div class="wline"><div class="k">분류</div><div><select id="a-cat" class="sel">${['공지/안내','업무 요청','청구/결제'].map(c=>`<option ${c===t.category?'selected':''}>${c}</option>`).join('')}</select></div></div>
+      <div class="wline"><div class="k">메시지 유형</div><div><select id="a-mtype" class="sel" style="max-width:240px">${['기본형','부가정보형','채널추가형','복합형'].map(k=>`<option ${t.msgType===k?'selected':''}>${k}</option>`).join('')}</select>
+        <p class="small muted" style="margin:4px 0 0">${({기본형:'본문과 버튼만 씁니다.',부가정보형:'본문 아래에 바뀌지 않는 안내 문구를 덧붙입니다.',채널추가형:'맨 아래에 「채널 추가」 버튼이 붙습니다.',복합형:'부가 정보와 「채널 추가」 버튼을 함께 씁니다.'})[t.msgType]}</p></div></div>
+      <div class="wline"><div class="k">강조 유형</div><div class="hstack">${['선택 안 함','강조표기형','이미지형'].map(k=>`<label class="chk"><input type="radio" name="a-kind" value="${k}" ${t.kind===k?'checked':''}> ${k}</label>`).join('')}</div></div>
+      ${t.kind==='이미지형'?`<div class="wline"><div class="k">이미지</div><div class="hstack"><label class="btn sm" for="a-img" style="cursor:pointer">이미지 올리기</label><input type="file" id="a-img" accept="image/*" hidden><span class="small muted">가로 800 × 세로 400 · jpg · png</span></div></div>`:''}
+      ${t.kind==='강조표기형'?`<div class="wline"><div class="k">강조 표기</div><div class="fgrid"><div class="fl"><label for="a-emph">타이틀</label><input id="a-emph" class="inp" value="${esc(t.emph||'')}" maxlength="23"></div><div class="fl"><label for="a-emphsub">보조 문구</label><input id="a-emphsub" class="inp" value="${esc(t.emphSub||'')}" maxlength="18"></div></div>
+        <p class="small muted" style="margin:6px 0 0">타이틀과 보조 문구는 본문에 있는 말을 옮겨야 합니다. 본문에 없으면 반려될 수 있습니다.</p></div></div>`:''}
+      <div class="wline"><div class="k">내용</div><div><textarea id="a-body" class="inp" style="min-height:200px">${esc(t.body)}</textarea>
+        <div class="cnt ${t.body.length>1000?'over':''}"><span id="a-cnt">${t.body.length}</span> / 1,000자</div>
+        <div class="hstack small"><span class="muted">변수 넣기</span>${AUTO_VARS.map(v=>`<button class="btn sm" type="button" data-var="${v}" data-into="a-body"><code>#{${v}}</code></button>`).join('')}</div></div></div>
+      ${['부가정보형','복합형'].includes(t.msgType)?`<div class="wline"><div class="k">부가 정보</div><div><textarea id="a-extra" class="inp" style="min-height:60px" maxlength="500">${esc(t.extra||'')}</textarea></div></div>`:''}
+      <div class="wline"><div class="k">버튼</div><div class="btnrow">${t.buttons.map((b,i)=>`<div class="hstack"><select class="sel" aria-label="버튼 종류"><option>웹링크</option><option>앱링크</option></select><input class="inp" data-abtn="${i}" value="${esc(b)}" placeholder="버튼 이름" aria-label="버튼 이름"><button class="btn sm" type="button" data-adel="${i}" aria-label="버튼 빼기">✕</button></div>`).join('')}
+        ${t.buttons.length<5?'<div><button class="btn sm" type="button" id="a-addbtn">버튼 추가</button> <span class="small muted">최대 5개</span></div>':''}</div></div>
+      <div class="wline"><div class="k">대체문자</div><div><label class="chk"><input type="checkbox" id="a-fb" ${t.fallback?'checked':''}> 카카오톡을 쓰지 않는 분께는 같은 내용을 문자로 보냅니다</label></div></div>
+      </fieldset>
+    </section>
+    <section class="card min"><div class="card-h"><h3>세무사별 미리보기</h3></div>
+      <div class="fl" style="margin-bottom:12px"><label for="pv-office">세무사</label><select id="pv-office" class="sel">${S.offices.map(x=>`<option value="${x.id}" ${x.id===S.pvOffice?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>
+      <div id="pv">${phone(t,o)}</div></section>
+  </div>`;
+}
+
+/* ───────── 템플릿 관리 › 카카오 브랜드메시지 ───────── */
+function vTBrand(){
+  const t=brand(S.bSel),max=t.type==='와이드형'?76:1300,maxBtn=t.type==='와이드형'?2:5;
+  return `<section class="card"><div class="card-h"><h3>브랜드 템플릿</h3><span class="sub tnum">${S.brand.length}개</span><span class="r"><button class="btn primary" id="new-brand">신규등록</button></span></div>
+  <div class="tw"><table>
+    <thead><tr><th>템플릿명</th><th>메시지 유형</th><th>버튼</th><th>저장일</th><th>상태</th></tr></thead>
+    <tbody>${S.brand.map(x=>`<tr class="hov trow ${x.id===S.bSel?'sel-row':''}" data-bsel="${x.id}" tabindex="0"><td><b>${esc(x.name||'(이름 없음)')}</b></td><td>${esc(x.type)}</td><td class="tnum">${x.buttons.filter(Boolean).length}개</td><td class="tnum">${x.saved||'—'}</td><td>${stTag('사용 가능')}</td></tr>`).join('')}</tbody></table></div></section>
+  <div class="cols">
+    <section class="card min"><div class="card-h"><h3>${esc(t.name||'새 브랜드메시지')}</h3><span class="r"><button class="btn sm danger" id="del-brand">삭제</button><button class="btn sm primary" id="save-brand">저장</button></span></div>
+      <div class="wline"><div class="k">발신 채널</div><div><span class="tnum">${esc(OPS.channel)}</span> ${tag('운영사 채널','info')}</div></div>
+      <div class="wline"><div class="k">템플릿명</div><div><input id="b-name" class="inp" value="${esc(t.name)}" maxlength="30"></div></div>
+      <div class="wline"><div class="k">메시지 유형</div><div><div class="seg sm" role="group" aria-label="메시지 유형">${['텍스트형','이미지형','와이드형'].map(k=>`<button type="button" data-btype="${k}" aria-pressed="${t.type===k}">${k}</button>`).join('')}</div></div></div>
+      ${t.type!=='텍스트형'?`<div class="wline"><div class="k">이미지</div><div class="hstack"><label class="btn sm" for="b-img" style="cursor:pointer">이미지 올리기</label><input type="file" id="b-img" accept="image/*" hidden>
+        <span class="small muted">${t.type==='와이드형'?'가로 800 × 세로 600 권장':'가로 800 × 세로 400 권장'} · jpg · png</span>${t.img?'<button class="btn sm" type="button" id="b-imgdel">이미지 빼기</button>':''}</div></div>`:''}
+      <div class="wline"><div class="k">내용</div><div><textarea id="b-body" class="inp" style="min-height:${t.type==='와이드형'?90:170}px">${esc(t.body)}</textarea>
+        <div class="cnt ${t.body.length>max?'over':''}"><span id="b-cnt">${t.body.length}</span> / ${max.toLocaleString()}자</div>
+        <div class="hstack small"><span class="muted">변수 넣기</span>${['세무사명','고객명','상호'].map(v=>`<button class="btn sm" type="button" data-var="${v}" data-into="b-body"><code>#{${v}}</code></button>`).join('')}</div></div></div>
+      <div class="wline"><div class="k">버튼</div><div class="btnrow">${t.buttons.map((b,i)=>`<div class="hstack"><select class="sel" aria-label="버튼 종류"><option>웹링크</option><option>앱링크</option><option>채널추가</option></select><input class="inp" data-bbtn="${i}" value="${esc(b)}" placeholder="버튼 이름" aria-label="버튼 이름"><button class="btn sm" type="button" data-bdel="${i}" aria-label="버튼 빼기">✕</button></div>`).join('')}
+        ${t.buttons.length<maxBtn?`<div><button class="btn sm" type="button" id="b-addbtn">버튼 추가</button> <span class="small muted">최대 ${maxBtn}개</span></div>`:''}</div></div>
+      <div class="wline"><div class="k">수신거부</div><div class="small"><span class="tnum">${esc(OPS.optout)}</span> <span class="muted">· 메시지 끝에 저절로 붙습니다</span></div></div>
+    </section>
+    <section class="card min"><div class="card-h"><h3>미리보기</h3></div><div id="pv">${phone(t,{name:OPS.name,channel:OPS.channel,phone:OPS.phone})}</div></section>
+  </div>`;
+}
+
+/* ───────── 주소록 › 세무사별 주소록 (윙고 주소록 꼴) ───────── */
+function bookRows(){
+  const f=S.af,q=f.q.trim();
+  return S.contacts.filter(c=>(f.oid==='all'||c.oid===f.oid)&&(!f.gname||c.gname===f.gname)&&(!f.hideOpt||!c.optout)&&(!q||(c.name+c.phone+c.biz+office(c.oid).name).includes(q)));
+}
+function vBook(){
+  const f=S.af,rows=bookRows(),allSel=rows.length&&rows.every(c=>S.pick.has(c.id));
+  const cnt=fn=>S.contacts.filter(fn).length;
+  const curO=f.oid==='all'?null:office(f.oid);
+  return `<div class="ab">
+    <div class="gbox">
+      <div class="gtitle">세무사</div>
+      <div class="tree">
+        <button class="gitem" data-af="all" ${f.oid==='all'?'aria-current="true"':''}><span class="nm">전체 세무사</span><span class="c tnum">${S.contacts.length}</span></button>
+        ${S.offices.map(o=>`<button class="gitem" data-af="${o.id}" ${f.oid===o.id&&!f.gname?'aria-current="true"':''}><span class="nm">${esc(o.name)}</span><span class="c tnum">${cnt(c=>c.oid===o.id)}</span></button>
+          ${f.oid===o.id?`<div class="sub-g">${o.groups.map(g=>`<button class="gitem child" data-af="${o.id}" data-ag="${esc(g)}" ${f.gname===g?'aria-current="true"':''}><span class="nm">${esc(g)}</span><span class="c tnum">${cnt(c=>c.oid===o.id&&c.gname===g)}</span></button>`).join('')}</div>`:''}`).join('')}
+      </div>
+    </div>
+    <section class="card" style="margin:0">
+      <form class="quick" id="quick" aria-label="빠른 등록">
+        <div class="fl"><label for="qk-o">세무사</label><select id="qk-o" class="sel">${S.offices.map(o=>`<option value="${o.id}" ${curO&&curO.id===o.id?'selected':''}>${esc(o.name)}</option>`).join('')}</select></div>
+        <div class="fl"><label for="qk-n">이름</label><input id="qk-n" class="inp" placeholder="홍길동"></div>
+        <div class="fl"><label for="qk-p">휴대폰번호</label><input id="qk-p" class="inp tnum" placeholder="010-0000-0000" inputmode="tel"></div>
+        <div class="fl"><label for="qk-g">그룹</label><input id="qk-g" class="inp" placeholder="${curO?esc(curO.groups[0]):'그룹 이름'}" value="${f.gname?esc(f.gname):''}"></div>
+        <button class="btn primary" type="submit">추가</button>
+      </form>
+      <div class="card-h"><h3>${curO?esc(curO.name)+(f.gname?' › '+esc(f.gname):''):'전체 세무사'}</h3><span class="sub tnum">${rows.length}명</span>
+        <span class="r"><label class="chk small"><input type="checkbox" id="hide-opt" ${f.hideOpt?'checked':''}> 수신거부 숨기기</label><input class="inp" id="aq" style="width:220px" placeholder="이름 · 번호 · 상호 · 세무사로 찾기" value="${esc(f.q)}" aria-label="주소록 찾기"></span></div>
+      <div class="tw"><table>
+        <thead><tr><th style="width:36px"><input type="checkbox" id="pick-all" aria-label="보이는 줄 모두 고르기" ${allSel?'checked':''}></th><th>세무사</th><th>그룹</th><th>고객명</th><th>휴대폰</th><th>상호</th><th>수신</th><th>광고 수신</th></tr></thead>
+        <tbody>${rows.map(c=>`<tr class="hov ${c.optout?'off':''} ${S.pick.has(c.id)?'sel-row':''}"><td><input type="checkbox" data-pick="${c.id}" aria-label="${esc(c.name)} 고르기" ${S.pick.has(c.id)?'checked':''}></td>
+          <td class="small">${esc(office(c.oid).name)}</td><td>${tag(c.gname,'',true)}</td><td class="nm"><b>${esc(c.name)}</b></td><td class="tnum">${esc(c.phone)}</td><td>${esc(c.biz)}</td>
+          <td>${c.optout?tag('수신거부','bad',true):'<span class="small muted">수신중</span>'}</td><td>${c.adOk?'<span class="small muted">동의</span>':tag('미동의','',true)}</td></tr>`).join('')||`<tr><td colspan="8" class="empty">찾는 번호가 없습니다.</td></tr>`}</tbody></table></div>
+      <p class="small muted" style="margin:10px 0 0">예시 자료라 세무사마다 고객 일부만 넣어 두었습니다. 흐린 줄은 수신거부한 번호로, 보낼 때 저절로 빠집니다.</p>
+      ${S.pick.size?`<div class="selbar"><b class="tnum">${S.pick.size}명 고름</b><span class="small muted">세무사 ${new Set(S.contacts.filter(c=>S.pick.has(c.id)).map(c=>c.oid)).size}곳</span>
+        <span style="flex:1"></span><button class="btn sm" id="pick-clear">선택 해제</button><button class="btn sm primary" data-go="send">카카오톡 전송 ›</button></div>`:''}
+    </section>
+  </div>`;
+}
+
+/* ───────── 주소록 › 메시지 보내기 (윙고 작성 화면 꼴) ───────── */
+function manualList(){return S.send.manual.split(/[\n,]/).map(s=>s.trim()).filter(Boolean).map(s=>({raw:s,phone:normPhone(s)}));}
+function targets(){
+  const isBrand=S.send.kind==='brand';
+  const picked=people().filter(c=>S.pick.has(c.id));
+  const ok=picked.filter(c=>!c.optout&&(!isBrand||c.adOk));
+  const man=manualList().filter(m=>m.phone).map((m,i)=>({id:'m'+i,oid:null,name:'직접 입력',phone:m.phone,biz:''}));
+  const seen=new Set(),all=[];[...ok,...man].forEach(c=>{if(!seen.has(c.phone)){seen.add(c.phone);all.push(c);}});
+  return {all,optout:picked.filter(c=>c.optout).length,noAd:isBrand?picked.filter(c=>!c.optout&&!c.adOk).length:0,badManual:manualList().filter(m=>!m.phone).length};
+}
+function current(){return S.send.kind==='brand'?(S.send.bid?brand(S.send.bid):null):(S.send.tid?alim(S.send.tid)?.approved&&alim(S.send.tid):null);}
+function checkSend(){
+  const sd=S.send,m=current(),tg=targets(),bad=[],warn=[];
+  if(!m) bad.push('템플릿을 고르지 않았습니다.');
+  if(!tg.all.length) bad.push('받는 분이 없습니다 — 주소록에서 고르거나 번호를 직접 넣어 주세요.');
+  if(m&&sd.kind==='alim') extraVars(m.approved.body).filter(v=>!String(sd.vars[v]||'').trim()).forEach(v=>bad.push(`「${v}」 값이 비어 있습니다.`));
+  if(sd.when==='later'&&!sd.at) bad.push('예약 시각을 골라 주세요.');
+  if(sd.kind==='brand'){const h=sd.when==='later'&&sd.at?+sd.at.slice(11,13):new Date().getHours();if(h>=21||h<8)bad.push('브랜드메시지는 밤 9시부터 아침 8시까지 보낼 수 없습니다 — 예약 시각을 바꿔 주세요.');}
+  if(sd.kind==='alim'&&sd.channel==='office'&&tg.all.some(c=>c.oid&&office(c.oid).sender!=='연결됨')) warn.push('채널 연동 대기 중인 세무사의 고객은 운영사 채널로 나갑니다.');
+  if(tg.optout) warn.push(`수신거부 ${tg.optout}명은 저절로 빠졌습니다.`);
+  if(tg.noAd) warn.push(`광고 수신 미동의 ${tg.noAd}명은 저절로 빠졌습니다.`);
+  if(tg.badManual) warn.push(`직접 넣은 번호 중 ${tg.badManual}개는 휴대폰 번호가 아니라 뺐습니다.`);
+  if(tg.all.some(c=>!c.oid)&&sd.kind==='alim'&&sd.channel==='office') warn.push('가입자 주소록 · 직접 넣은 번호는 운영사 채널로 나갑니다.');
+  return {bad,warn};
+}
+function vSend(){
+  const sd=S.send,isBrand=sd.kind==='brand',m=current(),tg=targets(),ev=m&&!isBrand?extraVars(m.approved.body):[];
+  const list=isBrand?S.brand:S.alim.filter(t=>t.approved);
+  const ck=sd.checked?checkSend():null;
+  const pvOffice=isBrand||sd.channel==='ops'||!tg.all[0]?.oid?{name:OPS.name,channel:OPS.channel,phone:OPS.phone}:office(tg.all[0].oid);
+  const pvMsg=m?(isBrand?m:{...m,...m.approved}):null;
+  const cost=tg.all.length*(isBrand?20:9);
+  return `<div class="hstack" style="margin-bottom:14px"><div class="seg" role="group" aria-label="메시지 종류"><button data-skind="alim" aria-pressed="${!isBrand}">카카오 알림톡</button><button data-skind="brand" aria-pressed="${isBrand}">카카오 브랜드메시지</button></div>
+    <span class="small muted">${isBrand?'광고 메시지 · 운영사 채널':'정보성 메시지 · 검수 받은 템플릿만'}</span></div>
+  <div class="cols">
+    <section class="card min"><div class="card-h"><h3>메시지 작성</h3></div>
+      <div class="wline"><div class="k">발신 채널</div><div>${isBrand?`<span class="tnum">${esc(OPS.channel)}</span> ${tag('운영사 채널','info')}`
+        :`<div class="hstack"><label class="chk"><input type="radio" name="ch" value="office" ${sd.channel==='office'?'checked':''}> 받는 분의 세무사 채널로</label><label class="chk"><input type="radio" name="ch" value="ops" ${sd.channel==='ops'?'checked':''}> 운영사 채널(${esc(OPS.channel)})로</label></div>
+          <p class="small muted" style="margin:4px 0 0">세무사 채널로 보내면 고객님은 거래하는 세무사 이름으로 받습니다.</p>`}</div></div>
+      <div class="wline"><div class="k">템플릿</div><div><select id="s-t" class="sel"><option value="">— 템플릿 고르기 —</option>${list.map(x=>`<option value="${x.id}" ${(isBrand?sd.bid:sd.tid)===x.id?'selected':''}>${esc(x.name)}${isBrand?` · ${x.type}`:''}</option>`).join('')}</select>
+        <p class="small muted" style="margin:4px 0 0">${isBrand?'브랜드메시지는 템플릿 관리 › 브랜드 템플릿에서 만듭니다.':'검수 승인된 알림톡만 고를 수 있습니다.'}</p></div></div>
+      ${ev.length?`<div class="wline"><div class="k">내용 채우기</div><div><div class="fgrid">${ev.map(v=>`<div class="fl"><label for="sv-${esc(v)}">${esc(v)}</label><input id="sv-${esc(v)}" class="inp" data-svar="${esc(v)}" value="${esc(sd.vars[v]||'')}"></div>`).join('')}</div>
+        <p class="small muted" style="margin:6px 0 0">모든 분께 같은 값이 들어갑니다. 고객명 · 세무사명 · 사무실전화는 받는 분마다 저절로 채워집니다.</p></div></div>`:''}
+      <div class="wline"><div class="k">수신번호</div><div style="display:flex;flex-direction:column;gap:8px">
+        <div class="hstack"><button class="btn sm" data-go="taxbook">가입자 주소록</button><button class="btn sm" data-go="book">세무사별 주소록</button>${S.pick.size?`<button class="btn sm" id="pick-clear">고른 번호 비우기</button>`:''}<span class="small muted">${S.pick.size}명 고름</span></div>
+        <div class="picked">${people().filter(c=>S.pick.has(c.id)).slice(0,60).map(c=>`<span class="${c.optout||(isBrand&&!c.adOk)?'muted':''}">${esc(c.name)} <span class="muted tnum">${esc(c.phone.slice(-4))}</span><button type="button" data-unpick="${c.id}" aria-label="${esc(c.name)} 빼기">✕</button></span>`).join('')||'<span style="border:0;color:var(--muted)">고른 번호가 없습니다</span>'}${S.pick.size>60?`<span>외 ${S.pick.size-60}명</span>`:''}</div>
+        <textarea id="s-manual" class="inp" style="min-height:60px" placeholder="번호를 직접 넣을 때 — 한 줄에 하나씩 또는 쉼표로">${esc(sd.manual)}</textarea>
+        <div class="small">받는 분 <b class="tnum" style="color:var(--ink)">${tg.all.length}명</b> <span class="muted">· 수신거부${isBrand?' · 광고 미동의':''} 번호는 저절로 빠집니다</span></div></div></div>
+      ${!isBrand?`<div class="wline"><div class="k">대체문자</div><div><label class="chk"><input type="checkbox" id="s-fb" ${sd.fallback?'checked':''}> 카카오톡으로 못 받으면 문자로 보내기</label></div></div>`:''}
+      <div class="wline"><div class="k">전송 시각</div><div class="hstack">
+        <label class="chk"><input type="radio" name="when" value="now" ${sd.when==='now'?'checked':''}> 즉시</label>
+        <label class="chk"><input type="radio" name="when" value="later" ${sd.when==='later'?'checked':''}> 예약</label>
+        ${sd.when==='later'?`<input type="datetime-local" id="s-at" class="inp" style="width:220px" value="${esc(sd.at)}" aria-label="예약 시각">`:''}</div></div>
+      ${ck?(ck.bad.length?`<div class="note bad" style="margin-top:6px"><b style="color:var(--bad-ink)">오류 ${ck.bad.length}건 — 고친 뒤 다시 검사해 주세요</b><ul class="check-list">${ck.bad.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`
+        :`<div class="note good" style="margin-top:6px"><b style="color:var(--good-ink)">오류 없음</b> — 「${esc(m.name)}」을 ${tg.all.length}명에게 ${sd.when==='now'?'바로':esc(sd.at.replace('T',' '))+'에'} 보냅니다. 예상 비용 ${won(cost)}(부가세 별도).${ck.warn.length?`<ul class="check-list">${ck.warn.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}</div>`):''}
+      <div class="hstack" style="justify-content:flex-end;margin-top:14px">
+        <button class="btn" id="do-check">오류검사</button>
+        <button class="btn primary" id="do-send" ${ck&&!ck.bad.length?'':'disabled'}>${sd.armed?'한 번 더 누르면 전송':(sd.when==='now'?'전송':'예약 전송')+` (${tg.all.length}명)`}</button></div>
+    </section>
+    <section class="card min"><div class="card-h"><h3>미리보기</h3><span class="sub">${tg.all[0]?esc(tg.all[0].name)+' 님 기준':''}</span></div>${phone(pvMsg,pvOffice,tg.all[0],sd.vars)}</section>
+  </div>`;
+}
+
+/* ───────── 전송결과 › 전송내역 · 예약내역 ───────── */
+const kindTag=b=>tag(b.kind==='brand'?'브랜드메시지':'알림톡',b.kind==='brand'?'':'info');
+const srcLabel=b=>b.src==='정기'?`정기 ${b.no}회`:b.src;
+function sums(b){const s={성공:0,실패:0,대체:0,대기:0};b.logs.forEach(l=>s[l.result]++);return s;}
+/* 전송내역 — 윙고 전송결과 표 꼴: 전송일자 · 제목 · 메시지 타입 · 전송건수 · 성공 · 실패 · 대기 · 진행상황 */
+const MTYPES=['알림톡 텍스트','알림톡 이미지','브랜드메시지'];
+const mtypeOf=m=>m.type!==undefined?'브랜드메시지 '+m.type.replace('형',''):'알림톡 '+(m.kind==='이미지형'?'이미지':'텍스트');
+const dotted=at=>at.replace(/-/g,'.');
+const CAL='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M9 15l2 2 4-4"/></svg>';
+function vSent(){
+  const f=S.hf,q=f.q.trim();
+  const rows=S.batches.filter(b=>!b.reserved&&b.at.slice(0,10)>=f.from&&b.at.slice(0,10)<=f.to&&(f.kind==='전체'||b.mtype.startsWith(f.kind))&&(!q||(b.title+(b.body||'')).includes(q))).flatMap(splitRows).sort((x,y)=>y.at.localeCompare(x.at)||x.channels[0].localeCompare(y.channels[0]));
+  return `<section class="card">
+    <div class="filters" style="justify-content:flex-end">
+      <label class="datebox">${CAL}<input type="date" id="hf-from" value="${esc(f.from)}" aria-label="시작일"></label><span class="muted">~</span>
+      <label class="datebox">${CAL}<input type="date" id="hf-to" value="${esc(f.to)}" aria-label="끝날"></label>
+      <select id="hf-kind" class="sel" style="width:170px" aria-label="메시지 타입"><option value="전체">메시지 타입</option>${MTYPES.map(k=>`<option ${f.kind===k?'selected':''}>${k}</option>`).join('')}</select>
+      <div class="srch" style="width:240px">${SRCH.replace('left:10px','')}<input class="inp" id="hf-q" placeholder="제목 또는 내용 입력" value="${esc(f.q)}" aria-label="제목 또는 내용 찾기"></div>
+    </div>
+    <div class="tw"><table class="ctable">
+      <thead><tr><th>전송일자</th><th class="chcol-h">채널명</th><th>제목</th><th>메시지 타입</th><th>전송건수</th><th>성공</th><th>실패</th><th>대기</th><th>진행상황</th></tr></thead>
+      <tbody>${rows.map(b=>{const c=sums(b),open=S.bOpen===b.id,wait=c.대기>0;return `<tr class="hov">
+        <td class="tnum nowrap">${esc(dotted(b.at))}</td><td class="chcell">${chanCell(b)}</td>
+        <td class="ttl"><button class="tlink" data-bopen="${b.id}" aria-expanded="${open}" title="${esc(b.title)}">${esc(b.title)}</button>${b.src!=='운영사'?`<div class="small muted">${b.src==='정기'?'매주 정기':'세무사 직접'} · ${b.offices.length>1?esc(b.offices[0])+' 외 '+(b.offices.length-1)+'곳':esc(b.offices[0]||'')}</div>`:''}</td>
+        <td>${esc(b.mtype)}</td><td class="tnum">${b.logs.length}</td><td class="tnum">${c.성공+c.대체}</td>
+        <td class="tnum">${c.실패?`<b style="color:var(--bad-ink)">${c.실패}</b>`:0}</td><td class="tnum">${c.대기}</td>
+        <td class="nowrap"><span class="pdot ${wait?'run':''}"></span>${wait?'진행중':'완료'}</td></tr>
+        ${open?`<tr class="sub"><td colspan="9" style="text-align:left">${detail(b)}</td></tr>`:''}`}).join('')||`<tr><td colspan="9" class="empty">이 기간에 전송한 메시지가 없습니다.</td></tr>`}</tbody></table></div>
+    <div class="hstack" style="justify-content:space-between;margin-top:12px"><span class="small muted">제목을 누르면 받는 분별 결과가 펼쳐집니다. 대체문자로 받은 분은 성공에 넣어 셉니다.</span><button class="btn" id="hf-xls">엑셀다운로드</button></div>
+  </section>`;
+}
+function detail(b){
+  const s=sums(b),logs=b.logs.filter(l=>S.rFilter==='전체'||l.result===S.rFilter);
+  return `<div class="hstack" style="justify-content:space-between;margin-bottom:8px"><div class="fchips">${['전체','성공','대체','실패','대기'].map(k=>{const n=k==='전체'?b.logs.length:s[k];return n||k==='전체'?`<button class="fchip" data-rf="${k}" aria-pressed="${S.rFilter===k}">${k} <span class="tnum">${n}</span></button>`:''}).join('')}</div>
+    <button class="btn sm" data-resend="${b.id}" ${s.실패?'':'disabled'}>실패한 분께 다시 보내기</button></div>
+    <div class="tw" style="background:var(--card)"><table><thead><tr><th>세무사</th><th>고객명</th><th>휴대폰</th><th>결과</th><th>사유</th></tr></thead>
+    <tbody>${logs.map(l=>`<tr class="hov"><td class="small">${esc(l.office)}</td><td><b>${esc(l.name)}</b></td><td class="tnum">${esc(l.phone)}</td><td>${stTag(l.result)}</td><td class="small muted">${esc(l.why||'')}</td></tr>`).join('')}</tbody></table></div>`;
+}
+/* 예약내역 — 윙고 예약내역 꼴: 안내 세 줄 · 기간 · 검색 · 예약일자 · 제목 · 메시지 타입 · 전송예정건수 · 예약삭제 */
+const REFRESH='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>';
+/* 어느 채널로 나가는지 — 세무사 채널로 보내면 받는 분의 세무사마다 채널이 다르다 */
+function chansOf(b){if(b.channels)return b.channels;if(b.kind==='brand')return [OPS.channel];
+  return [...new Set(b.logs.map(l=>S.offices.find(o=>o.name===l.office)?.channel||OPS.channel))];}
+const chanCell=b=>{const c=chansOf(b);return `<span title="${esc(c.join(', '))}">${esc(c[0]||'—')}${c.length>1?` <span class="small muted">외 ${c.length-1}개</span>`:''}</span>`;};
+const minsLeft=at=>(new Date(at.replace(' ','T'))-new Date())/60000;
+function vReserved(){
+  const f=S.rf,q=f.q.trim();
+  const rows=S.batches.filter(b=>b.reserved&&!b.cancelled&&b.at.slice(0,10)>=f.from&&b.at.slice(0,10)<=f.to&&(!q||(b.title+(b.body||'')).includes(q))).flatMap(splitRows).sort((x,y)=>x.at.localeCompare(y.at)||x.channels[0].localeCompare(y.channels[0]));
+  return `<div class="hstack" style="margin-bottom:14px"><h2 style="font-size:20px">예약내역</h2><button class="kebab" id="r-refresh" aria-label="새로 불러오기" title="새로 불러오기" style="color:var(--ink)">${REFRESH}</button></div>
+  <ul class="rnotes"><li>「예약삭제」는 전송 5분 전까지 할 수 있습니다.</li><li>삭제된 메시지는 복구할 수 없습니다.</li><li>최근 3개월 동안 예약된 메시지를 확인할 수 있습니다.</li></ul>
+  <div class="filters" style="justify-content:flex-end;margin-top:28px">
+    <label class="datebox">${CAL}<input type="date" id="rf-from" value="${esc(f.from)}" aria-label="시작일"></label><span class="muted">~</span>
+    <label class="datebox">${CAL}<input type="date" id="rf-to" value="${esc(f.to)}" aria-label="끝날"></label>
+    <div class="srch" style="width:240px">${SRCH}<input class="inp" id="rf-q" placeholder="제목 또는 내용 입력" value="${esc(f.q)}" aria-label="제목 또는 내용 찾기"></div>
+  </div>
+  <div class="tw"><table class="ctable">
+    <thead><tr><th style="width:170px">예약일자</th><th class="chcol-h">채널명</th><th>제목</th><th style="width:170px">메시지 타입</th><th style="width:120px">전송예정건수</th><th style="width:110px">예약삭제</th></tr></thead>
+    <tbody>${rows.map(b=>{const open=S.rOpen===b.id,lock=minsLeft(b.at)<5;return `<tr class="hov"><td class="tnum nowrap">${esc(dotted(b.at))}</td><td class="chcell">${chanCell(b)}</td>
+      <td class="ttl" style="max-width:none"><button class="tlink" data-ropen="${b.id}" aria-expanded="${open}">${esc(b.title)}</button>${b.src==='정기'?'<div class="small muted">매주 정기 발송</div>':''}</td>
+      <td>${esc(b.mtype)}</td><td class="tnum">${b.logs.length}</td>
+      <td>${lock?'<span class="small muted">삭제 불가</span>':`<button class="btn sm danger" data-unres="${b.id}">삭제</button>`}</td></tr>
+      ${open?`<tr class="sub"><td colspan="6" style="text-align:left"><div class="tw" style="background:var(--card)"><table><thead><tr><th>보낼 곳</th><th>받는 분</th><th>휴대폰</th></tr></thead>
+        <tbody>${b.logs.map(l=>`<tr class="hov"><td class="small">${esc(l.office)}</td><td><b>${esc(l.name)}</b></td><td class="tnum">${esc(l.phone)}</td></tr>`).join('')}</tbody></table></div></td></tr>`:''}`}).join('')||'<tr><td colspan="6" class="empty" style="color:var(--ink)">데이터가 없습니다.</td></tr>'}</tbody></table></div>`;
+}
+
+/* 예시 전송 기록 */
+function mkLogs(cs,fbIds=[],failIds=[]){return cs.map(c=>({office:c.oid?office(c.oid).name:c.tax?'가입자 주소록':'직접 입력',name:c.name,phone:c.phone,result:failIds.includes(c.id)?'실패':fbIds.includes(c.id)?'대체':'성공',why:failIds.includes(c.id)?'없는 번호':fbIds.includes(c.id)?'카카오톡 미사용':''}));}
+function seed(){
+  const liveIds=()=>live().map(o=>o.id);
+  const weeklyTo=()=>S.contacts.filter(c=>!c.optout&&liveIds().includes(c.oid));
+  [[45,'2026-10-27'],[44,'2026-10-20'],[43,'2026-10-13']].forEach(([no,d],i)=>{
+    const cs=weeklyTo();S.batches.push({id:no,at:d+' 10:00',made:'매주 자동',kind:'alim',mtype:'알림톡 텍스트',body:S.alim[0].body,src:'정기',no,title:`${no}회 · ${['10월 5주차','10월 4주차','10월 3주차'][i]} 세무일정`,
+      offices:[...new Set(cs.map(c=>office(c.oid).name))],logs:mkLogs(cs,[cs[3]?.id,cs[17]?.id].slice(0,i===1?2:1),i===0?[cs[9]?.id]:[])});});
+  const vip=S.contacts.filter(c=>c.oid===2&&!c.optout).slice(0,6);
+  S.batches.push({id:201,at:'2026-10-15 14:20',made:'2026-10-15 14:20',kind:'alim',mtype:'알림톡 텍스트',body:S.alim[1].body,src:'세무사',title:'부가가치세 신고 자료 요청',offices:['한빛세무사무소'],logs:mkLogs(vip)});
+  const ad=S.contacts.filter(c=>!c.optout&&c.adOk&&[2,5].includes(c.oid)).slice(0,12);
+  S.batches.push({id:202,at:'2026-10-29 11:00',made:'2026-10-28 17:40',kind:'brand',mtype:'브랜드메시지 이미지',body:S.brand[0].body,src:'운영사',title:'연말정산 대비 절세 상담 이벤트',offices:['한빛세무사무소','다온세무법인 전주'],logs:mkLogs(ad,[],[ad[5]?.id])});
+  const nw=weeklyTo();
+  S.batches.push({id:301,at:'2026-11-03 10:00',made:'매주 자동',kind:'alim',mtype:'알림톡 텍스트',src:'정기',no:46,title:`46회 · ${S.issue.title}`,reserved:true,offices:[...new Set(nw.map(c=>office(c.oid).name))],logs:mkLogs(nw)});
+  const ye=S.contacts.filter(c=>c.oid===5&&!c.optout).slice(0,8);
+  S.batches.push({id:302,at:'2026-11-05 14:00',made:'2026-11-02 16:10',kind:'alim',mtype:'알림톡 텍스트',src:'운영사',title:'연말정산 자료 제출 요청',reserved:true,offices:['다온세무법인 전주'],logs:mkLogs(ye)});
+  S.batches.forEach(b=>b.logs=b.logs.filter(l=>l.phone));
+}
+
+/* ───────── 정기결제 · 연동 구조 ───────── */
+function vFees(){
+  return `<div class="cols half">
+    <section class="card"><div class="card-h"><h3>알림톡 요금표</h3><span class="sub">부가세 포함</span></div>
+      <div class="tw"><table style="min-width:0"><thead><tr><th>주소록 수</th><th class="r">월 이용료(원)</th><th class="r">세무사</th></tr></thead><tbody>
+      ${S.tiers.map((t,i)=>`<tr><td>${tierLabel(i)}</td><td class="r"><input class="inp tnum" data-tier="${i}" value="${t.price}" style="max-width:130px;text-align:right" aria-label="${tierLabel(i)} 요금"></td><td class="r tnum">${S.offices.filter(o=>tierOf(o.count)===i).length}곳</td></tr>`).join('')}</tbody></table></div>
+      <div class="wline" style="margin-top:8px"><div class="k">매월 결제일</div><div class="hstack"><select id="bill-day" class="sel" style="width:90px">${[1,5,10,15,25].map(d=>`<option ${d===S.billDay?'selected':''}>${d}</option>`).join('')}</select><span>일</span></div></div>
+      <div class="wline"><div class="k">브랜드메시지</div><div class="small muted">운영사가 보내는 광고 메시지라 세무사 이용료에 넣지 않습니다.</div></div></section>
+    <section class="card"><div class="card-h"><h3>결제 실패 처리</h3></div><ol class="flow">
+      <li><div><b>결제일에 실패</b><span>세무사에게 카드를 바꿔 달라는 알림톡 · 문자를 보냅니다.</span></div></li>
+      <li><div><b>3일 뒤 자동 재시도</b><span>카드를 바꿨다면 새 카드로 결제합니다.</span></div></li>
+      <li><div><b>7일 지나도 실패</b><span>매주 발송을 멈추고, 결제되면 다음 회차부터 다시 나갑니다.</span></div></li></ol></section>
+  </div>`;
+}
+function vPayments(){
+  const f=S.pf,months=[...new Set(S.pays.map(p=>p.at.slice(0,7)))].sort().reverse();
+  const rows=S.pays.filter(p=>(f.month==='전체'||p.at.startsWith(f.month))&&(f.st==='전체'||p.st===f.st)&&(f.oid==='전체'||p.oid===+f.oid)).sort((a,b)=>b.at.localeCompare(a.at));
+  const sum=st=>rows.filter(p=>p.st===st).reduce((a,p)=>a+p.amount,0);
+  return `<div class="stats" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+    <div class="stat"><div class="l">승인</div><div class="v tnum">${won(sum('승인'))}</div><div class="h">${rows.filter(p=>p.st==='승인').length}건</div></div>
+    <div class="stat"><div class="l">실패</div><div class="v tnum ${sum('실패')?'bad':''}">${won(sum('실패'))}</div><div class="h">${rows.filter(p=>p.st==='실패').length}건</div></div>
+    <div class="stat"><div class="l">취소 · 환불</div><div class="v tnum">${won(sum('취소'))}</div><div class="h">${rows.filter(p=>p.st==='취소').length}건</div></div>
+  </div>
+  <section class="card"><div class="card-h"><h3>결제내역</h3><span class="sub tnum">${rows.length}건</span></div>
+    <div class="filters">
+      <select id="pf-month" class="sel" aria-label="결제 달"><option value="전체">전체 기간</option>${months.map(m=>`<option value="${m}" ${f.month===m?'selected':''}>${m.replace('-','년 ')}월</option>`).join('')}</select>
+      <select id="pf-st" class="sel" aria-label="결제 상태">${['전체','승인','실패','취소'].map(k=>`<option value="${k}" ${f.st===k?'selected':''}>${k==='전체'?'상태 전체':k}</option>`).join('')}</select>
+      <select id="pf-oid" class="sel" aria-label="세무사"><option value="전체">세무사 전체</option>${S.offices.map(o=>`<option value="${o.id}" ${String(f.oid)===String(o.id)?'selected':''}>${esc(o.name)}</option>`).join('')}</select>
+    </div>
+    <div class="tw"><table>
+      <thead><tr><th>결제일시</th><th>세무사</th><th>구분</th><th>구간</th><th class="r">금액</th><th>카드</th><th>상태</th><th>승인번호 · 사유</th></tr></thead>
+      <tbody>${rows.map(p=>`<tr class="hov"><td class="tnum">${esc(p.at)}</td><td><b>${esc(office(p.oid).name)}</b></td><td class="small">${esc(p.kind)}</td><td class="small">${esc(p.tier)}</td>
+        <td class="r tnum">${p.st==='취소'?'−':''}${won(p.amount)}</td><td class="small">${esc(p.card)}</td><td>${stTag(p.st==='취소'?'취소':p.st)}</td>
+        <td class="small ${p.st==='실패'?'':'muted'} tnum" style="${p.st==='실패'?'color:var(--bad-ink)':''}">${esc(p.st==='승인'?p.no:p.why)}</td></tr>`).join('')||'<tr><td colspan="8" class="empty">결제내역이 없습니다.</td></tr>'}</tbody></table></div>
+  </section>`;
+}
+/* 예시 결제내역 — 실서버에서는 토스페이먼츠 결제 결과를 그대로 저장 */
+function seedPays(){
+  const P=[];let n=0;const no=()=>String(30000000+(++n)*7919).slice(-8);
+  ['2026-08-05','2026-09-05','2026-10-05'].forEach(d=>S.offices.forEach(o=>{
+    if(!o.card||o.joined>d)return;const ti=tierOf(o.count),card=`${o.card.brand} ··${o.card.last4}`,base={oid:o.id,tier:tierLabel(ti),amount:S.tiers[ti].price,card};
+    if(o.id===3&&d==='2026-10-05'){P.push({...base,at:d+' 09:00',kind:'정기결제',st:'실패',why:'카드 한도 초과'});P.push({...base,at:'2026-10-08 09:00',kind:'자동 재시도',st:'실패',why:'카드 한도 초과'});return;}
+    P.push({...base,at:d+' 09:00',kind:'정기결제',st:'승인',no:no()});}));
+  const o5=office(5);P.push({oid:5,tier:'첫 달 일할',amount:24000,card:`${o5.card.brand} ··${o5.card.last4}`,at:'2026-09-20 15:12',kind:'가입 첫 결제',st:'승인',no:no()});
+  P.push({oid:2,tier:tierLabel(tierOf(214)),amount:50000,card:'국민 ··0921',at:'2026-09-07 11:30',kind:'환불',st:'취소',why:'중복 결제 환불'});
+  S.pays=P;
+}
+function vFlow(){
+  return `<div class="cols half">
+    <section class="card"><div class="card-h"><h3>매주 저절로 일어나는 일</h3></div><ol class="flow">
+      <li><div><b>${S.schedule.day}요일 ${S.schedule.time} 예약 작업 시작</b><span>결제 정상 · 채널 연결된 세무사만 고릅니다.</span></div></li>
+      <li><div><b>세무사별 주소록 읽기</b><span>수신거부 · 발송 제외 그룹을 빼고 번호 꼴을 확인합니다.</span></div></li>
+      <li><div><b>발송사에 묶어서 요청</b><span>세무사 채널별로 같은 템플릿 코드 + 고객별 변수.</span></div></li>
+      <li><div><b>결과 받아 저장</b><span>성공 · 대체 · 실패를 받는 분마다 남겨 전송내역과 세무사 화면에 보입니다.</span></div></li></ol></section>
+    <section class="card"><div class="card-h"><h3>운영 전에 준비할 것</h3></div><ul class="todo">
+      <li><span>NHN Cloud 연결 시험 <span class="small muted" id="nhn-res">AppKey · Secret Key 확인</span></span><button class="btn sm primary" id="nhn-test">연결 시험</button></li>
+      <li><span>발송사 채널 그룹 만들기 · 세무사 채널 넣기</span>${tag('준비')}</li>
+      <li><span>운영사 채널(${esc(OPS.channel)}) · 080 수신거부 번호</span>${tag('준비')}</li>
+      <li><span>토스페이먼츠 자동결제(빌링) 계약</span>${tag('준비')}</li>
+      <li><span>세무사별 카카오 채널(비즈니스 인증)</span>${tag('세무사')}</li></ul></section>
+  </div>`;
+}
+
+/* ───────── 그리기 · 이벤트 ───────── */
+
+/* ───────── 가입고객관리 › 채널 관리 (발송사 콘솔의 채널 / 그룹 화면 꼴) ───────── */
+S.channels=[
+  {id:'c0',name:'세무사알림톡_발송용',pf:'@세무사알림톡',date:'26.10.16',oid:null},
+  ...S.offices.filter(o=>o.sender==='연결됨').map((o,i)=>({id:'c'+o.id,name:o.name,pf:o.channel,date:['26.10.16','26.10.16','26.10.20','26.10.22','26.10.25'][i]||'26.10.30',oid:o.id}))
+];
+S.cgroups=[{id:'g1',name:'세무사 알림톡',chs:S.channels.map(c=>c.id),date:'26.10.16'}];
+S.invites=[
+  {id:1,gid:'g1',pf:'@새봄세무',name:'새봄세무사사무소',at:'2026-10-28 14:02',st:'수락 대기'},
+  {id:2,gid:'g1',pf:'@바른세무회계',name:'바른세무회계',at:'2026-10-20 09:40',st:'수락됨'},
+  {id:3,gid:'g1',pf:'@도원세무',name:'도원세무회계',at:'2026-10-31 17:15',st:'수락 대기'}
+];
+S.ch={q:'',gq:'',menu:null,gSel:'g1'};
+const SRCH='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20.5 20.5L16 16"/></svg>';
+const KEBAB='<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>';
+const FOLDER='<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+function vChannels(){
+  const q=S.ch.q.trim(),gq=S.ch.gq.trim();
+  const chs=S.channels.filter(c=>!q||(c.name+c.pf).includes(q));
+  const gs=S.cgroups.filter(g=>!gq||g.name.includes(gq));
+  const pending=S.invites.filter(i=>i.st==='수락 대기').length;
+  const sel=S.cgroups.find(g=>g.id===S.ch.gSel);
+  const inGroup=id=>S.cgroups.filter(g=>g.chs.includes(id)).map(g=>g.name);
+  return `<div class="chwrap">
+    <div class="chcol">
+      <div class="chhead"><h3>카카오 채널</h3><button class="btn primary" id="ch-link">＋ 채널 연동</button></div>
+      <div class="srch">${SRCH}<input class="inp" id="ch-q" placeholder="채널 검색" value="${esc(S.ch.q)}" aria-label="채널 검색"></div>
+      <div class="chlist">${chs.map(c=>`<div class="chcard"><span class="at">@</span><div class="tx"><b>${esc(c.name)}</b><span class="tnum">${esc(c.date)}</span> <span>· ${esc(c.pf)}${c.oid?'':' · 운영사'}${inGroup(c.id).length?'':' · 그룹 없음'}</span></div>
+        <button class="kebab" data-chmenu="${c.id}" aria-label="${esc(c.name)} 메뉴">${KEBAB}</button>
+        ${S.ch.menu===c.id?`<div class="menu" role="menu">${S.cgroups.filter(g=>!g.chs.includes(c.id)).map(g=>`<button data-chadd="${c.id}" data-g="${g.id}">「${esc(g.name)}」 그룹에 넣기</button>`).join('')}
+          ${S.cgroups.filter(g=>g.chs.includes(c.id)).map(g=>`<button data-chout="${c.id}" data-g="${g.id}">「${esc(g.name)}」 그룹에서 빼기</button>`).join('')}
+          <button class="danger" data-chdel="${c.id}">연동 해제</button></div>`:''}</div>`).join('')||'<p class="small muted">찾는 채널이 없습니다.</p>'}</div>
+    </div>
+    <div class="chcol">
+      <div class="chhead"><h3>카카오 채널 그룹 <button class="qmark" id="g-help" aria-label="채널 그룹 설명">?</button></h3>
+        <button class="btn primary" id="g-create">＋ 그룹 생성</button></div>
+      <div class="srch">${SRCH}<input class="inp" id="g-q" placeholder="그룹 검색" value="${esc(S.ch.gq)}" aria-label="그룹 검색"></div>
+      <div class="chlist">${gs.map(g=>`<div class="chcard ${S.ch.gSel===g.id?'on':''}"><span class="fold">${FOLDER}</span>
+        <div class="tx" data-gpick="${g.id}" role="button" tabindex="0" style="cursor:pointer"><b>${esc(g.name)}</b><span>속한 채널 ${g.chs.length}개</span></div>
+        <button class="kebab" data-gmenu="${g.id}" aria-label="${esc(g.name)} 메뉴">${KEBAB}</button>
+        ${S.ch.menu===g.id?`<div class="menu" role="menu"><button data-ginvite="${g.id}">채널 초대하기</button><button data-grename="${g.id}">이름 바꾸기</button><button class="danger" data-gdel="${g.id}">그룹 삭제</button></div>`:''}</div>`).join('')||'<p class="small muted">찾는 그룹이 없습니다.</p>'}</div>
+      ${sel?`<div class="members"><div class="small muted">「${esc(sel.name)}」에 속한 채널</div>${sel.chs.map(id=>S.channels.find(c=>c.id===id)).filter(Boolean).map(c=>`<div class="row2"><b>${esc(c.name)}</b><span class="small muted tnum">${esc(c.pf)}</span><button class="btn sm" data-chout="${c.id}" data-g="${sel.id}">빼기</button></div>`).join('')||'<p class="small muted">아직 채널이 없습니다. ⋮ › 채널 초대하기로 넣어 주세요.</p>'}</div>`:''}
+    </div>
+  </div>`;
+}
+function modal(html){const L=document.getElementById('layer');L.innerHTML=`<div class="layer"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;
+  L.querySelector('.layer').addEventListener('click',e=>{if(e.target.classList.contains('layer'))closeModal();});}
+function closeModal(){document.getElementById('layer').innerHTML='';}
+function chLinkModal(){
+  modal(`<h3>카카오 채널 연동</h3>
+  <p class="small muted" style="margin:0">카카오톡 채널 관리자센터의 채널 ID와, 그 채널 관리자로 등록된 휴대폰 번호를 넣으면 카카오톡으로 인증번호가 옵니다.</p>
+  <div class="fl"><label for="cl-pf">채널 ID</label><input id="cl-pf" class="inp" placeholder="@채널아이디"></div>
+  <div class="fgrid"><div class="fl"><label for="cl-ph">관리자 휴대폰</label><input id="cl-ph" class="inp tnum" placeholder="010-0000-0000"></div>
+  <div class="fl"><label for="cl-cat">사업 분류</label><select id="cl-cat" class="sel"><option>전문서비스 › 세무 · 회계</option><option>전문서비스 › 기타</option></select></div></div>
+  <div class="fl"><label for="cl-code">인증번호</label><div class="hstack" style="flex-wrap:nowrap"><input id="cl-code" class="inp tnum" placeholder="인증번호 6자리" maxlength="6"><button class="btn" id="cl-send" type="button">인증번호 받기</button></div></div>
+  <div class="hstack" style="justify-content:flex-end"><button class="btn" data-close>취소</button><button class="btn primary" id="cl-ok">연동</button></div>`);
+}
+function invitesModal(){
+  const st=s=>tag(s,s==='수락됨'?'good':s==='수락 대기'?'warn':'');
+  modal(`<h3>그룹 초대 내역</h3>
+  <p class="small muted" style="margin:0">초대받은 채널의 관리자가 수락하면 그룹에 들어옵니다. 수락 전에는 그 채널로 그룹 템플릿을 보낼 수 없습니다.</p>
+  <div class="tw"><table style="min-width:0"><thead><tr><th>채널</th><th>그룹</th><th>보낸 때</th><th>상태</th><th></th></tr></thead><tbody>
+  ${S.invites.map(i=>`<tr><td><b>${esc(i.name)}</b><div class="small muted">${esc(i.pf)}</div></td><td class="small">${esc(S.cgroups.find(g=>g.id===i.gid)?.name||'—')}</td><td class="small tnum">${esc(i.at)}</td><td>${st(i.st)}</td>
+    <td class="r">${i.st==='수락 대기'?`<button class="btn sm" data-iaccept="${i.id}">수락 처리 (데모)</button>`:''}</td></tr>`).join('')}</tbody></table></div>
+  <div class="hstack" style="justify-content:flex-end"><button class="btn" data-close>닫기</button></div>`);
+}
+function groupModal(g){
+  modal(`<h3>${g?'그룹 이름 바꾸기':'채널 그룹 생성'}</h3>
+  ${g?'':'<p class="small muted" style="margin:0">그룹을 만든 채널(운영사 채널)이 그룹의 주인이 됩니다. 알림톡 템플릿은 이 그룹 이름으로 등록되어 검수를 받습니다.</p>'}
+  <div class="fl"><label for="gm-name">그룹 이름</label><input id="gm-name" class="inp" value="${esc(g?.name||'')}" maxlength="20"></div>
+  <div class="hstack" style="justify-content:flex-end"><button class="btn" data-close>취소</button><button class="btn primary" id="gm-ok" data-g="${g?.id||''}">${g?'저장':'생성'}</button></div>`);
+}
+function inviteModal(gid){
+  const g=S.cgroups.find(x=>x.id===gid);
+  modal(`<h3>「${esc(g.name)}」 그룹에 채널 초대</h3>
+  <p class="small muted" style="margin:0">초대할 채널 ID를 넣으면 그 채널 관리자에게 초대가 갑니다. 수락하면 그룹에 들어옵니다.</p>
+  <div class="fgrid"><div class="fl"><label for="iv-pf">채널 ID</label><input id="iv-pf" class="inp" placeholder="@채널아이디"></div>
+  <div class="fl"><label for="iv-name">세무사 이름</label><input id="iv-name" class="inp" placeholder="○○세무회계"></div></div>
+  <div class="hstack" style="justify-content:flex-end"><button class="btn" data-close>취소</button><button class="btn primary" id="iv-ok" data-g="${gid}">초대 보내기</button></div>`);
+}
+
+/* ───────── 주소록 › 세무사 주소록 — 운영사가 세무사님들께 보낼 때 쓰는 명단 ───────── */
+S.tax=[
+  ...S.offices.map((o,i)=>({id:'t'+(i+1),tax:true,oid:null,name:o.owner,biz:o.name,phone:['010-4127-3380','010-2251-9046','010-8830-1172','010-6612-4405','010-3398-2714'][i],gname:'가입 세무사',optout:false,adOk:true,memo:`가입 ${o.joined}`})),
+  {id:'t6',tax:true,oid:null,name:'박도원',biz:'도원세무회계',phone:'010-7741-2093',gname:'가입 전 · 상담',optout:false,adOk:true,memo:'10/31 채널 그룹 초대'},
+  {id:'t7',tax:true,oid:null,name:'조은솔',biz:'은솔세무사사무소',phone:'010-5203-8816',gname:'가입 전 · 상담',optout:false,adOk:true,memo:'세무사회 모임에서 소개'},
+  {id:'t8',tax:true,oid:null,name:'문태경',biz:'태경세무회계',phone:'010-9182-4470',gname:'가입 전 · 상담',optout:false,adOk:false,memo:''},
+  {id:'t9',tax:true,oid:null,name:'하지성',biz:'세무법인 지성',phone:'010-3304-6651',gname:'가입 전 · 상담',optout:false,adOk:true,memo:'무료 체험 문의'},
+  {id:'t10',tax:true,oid:null,name:'백승호',biz:'승호세무사사무소',phone:'010-6670-1238',gname:'해지',optout:true,adOk:false,memo:'2026-09 해지'}
+];
+S.taxGroups=['가입 세무사','가입 전 · 상담','해지'];S.tf={g:'전체',q:''};S.nextT=100;
+const people=()=>[...S.contacts,...S.tax];
+function taxRows(){const f=S.tf,q=f.q.trim();return S.tax.filter(c=>(f.g==='전체'||c.gname===f.g)&&(!q||(c.name+c.phone+c.biz+c.memo).includes(q)));}
+function vTaxBook(){
+  const rows=taxRows(),allSel=rows.length&&rows.every(c=>S.pick.has(c.id)),cnt=g=>S.tax.filter(c=>c.gname===g).length;
+  const n=[...S.pick].filter(k=>String(k).startsWith('t')).length;
+  return `<div class="ab">
+    <div class="gbox">
+      <div class="gtitle">그룹</div>
+      <button class="gitem" data-tg="전체" ${S.tf.g==='전체'?'aria-current="true"':''}><span class="nm">전체</span><span class="c tnum">${S.tax.length}</span></button>
+      ${S.taxGroups.map(g=>`<button class="gitem" data-tg="${esc(g)}" ${S.tf.g===g?'aria-current="true"':''}><span class="nm">${esc(g)}</span><span class="c tnum">${cnt(g)}</span></button>`).join('')}
+    </div>
+    <section class="card" style="margin:0">
+      <form class="quick" id="tquick" aria-label="빠른 등록">
+        <div class="fl"><label for="tk-n">이름</label><input id="tk-n" class="inp" placeholder="홍길동"></div>
+        <div class="fl"><label for="tk-p">휴대폰번호</label><input id="tk-p" class="inp tnum" placeholder="010-0000-0000" inputmode="tel"></div>
+        <div class="fl"><label for="tk-b">사무소</label><input id="tk-b" class="inp" placeholder="○○세무회계"></div>
+        <div class="fl"><label for="tk-g">그룹</label><select id="tk-g" class="sel">${S.taxGroups.map(g=>`<option ${g===(S.tf.g==='전체'?'가입 전 · 상담':S.tf.g)?'selected':''}>${esc(g)}</option>`).join('')}</select></div>
+        <button class="btn primary" type="submit">추가</button>
+      </form>
+      <div class="card-h"><h3>${esc(S.tf.g)}</h3><span class="sub tnum">${rows.length}명</span>
+        <span class="r"><input class="inp" id="tq" style="width:220px" placeholder="이름 · 번호 · 사무소로 찾기" value="${esc(S.tf.q)}" aria-label="가입자 주소록 찾기"></span></div>
+      <div class="tw"><table>
+        <thead><tr><th style="width:36px"><input type="checkbox" id="tpick-all" aria-label="보이는 줄 모두 고르기" ${allSel?'checked':''}></th><th>그룹</th><th>세무사</th><th>사무소</th><th>휴대폰</th><th>메모</th><th>수신</th><th>광고 수신</th></tr></thead>
+        <tbody>${rows.map(c=>`<tr class="hov ${c.optout?'off':''} ${S.pick.has(c.id)?'sel-row':''}"><td><input type="checkbox" data-pick="${c.id}" aria-label="${esc(c.name)} 고르기" ${S.pick.has(c.id)?'checked':''}></td>
+          <td>${tag(c.gname,c.gname==='가입 세무사'?'info':'',true)}</td><td class="nm"><b>${esc(c.name)}</b></td><td>${esc(c.biz)}</td><td class="tnum">${esc(c.phone)}</td><td class="small muted">${esc(c.memo)}</td>
+          <td>${c.optout?tag('수신거부','bad',true):'<span class="small muted">수신중</span>'}</td><td>${c.adOk?'<span class="small muted">동의</span>':tag('미동의','',true)}</td></tr>`).join('')||'<tr><td colspan="8" class="empty">찾는 세무사가 없습니다.</td></tr>'}</tbody></table></div>
+      ${n?`<div class="selbar"><b class="tnum">세무사 ${n}명 고름</b><span class="small muted">운영사 채널로 나갑니다</span><span style="flex:1"></span><button class="btn sm" id="pick-clear">선택 해제</button><button class="btn sm primary" data-go="send">카카오톡 전송 ›</button></div>`:''}
+    </section>
+  </div>`;
+}
+const VIEWS={taxbook:vTaxBook,home:vHome,offices:vOffices,channels:vChannels,'t-alim':vTAlim,'t-brand':vTBrand,book:vBook,send:vSend,sent:vSent,reserved:vReserved,fees:vFees,billing:vPayments,flow:vFlow};
+function render(){renderNav();document.getElementById('main').innerHTML=VIEWS[S.view]();}
+function go(v){S.view=v;render();window.scrollTo(0,0);}
+const keep=id=>{const el=document.getElementById(id);if(!el)return;const p=el.selectionStart;render();const n=document.getElementById(id);if(n){n.focus();try{n.setSelectionRange(p,p);}catch(_){}}};
+const resetSend=()=>{S.send.checked=false;S.send.armed=false;};
+const editAlim=()=>{const t=alim(S.aSel);if(['승인','검수중','반려'].includes(t.status)&&t.status!=='승인')t.status='수정중';return t;};
+const repv=()=>{const pv=document.getElementById('pv');if(!pv)return;
+  if(S.view==='t-alim')pv.innerHTML=phone(alim(S.aSel),office(S.pvOffice));
+  if(S.view==='t-brand')pv.innerHTML=phone(brand(S.bSel),{name:OPS.name,channel:OPS.channel,phone:OPS.phone});};
+
+document.addEventListener('click',e=>{
+  if(S.ch?.menu&&!e.target.closest('.menu,.kebab')){S.ch.menu=null;render();}
+  const t=e.target.closest('button,[data-asel],[data-bsel],[data-gpick]');if(!t||t.disabled)return;const d=t.dataset;
+  if('close' in d)return closeModal();
+  if(d.go)return go(d.go);
+  if(d.asel){S.aSel=+d.asel;return render();}
+  if(d.bsel){S.bSel=+d.bsel;return render();}
+  if(d.book){S.af={...S.af,oid:+d.book,gname:null};return go('book');}
+  if(d.tg){S.tf.g=d.tg;return render();}
+  if(d.af){S.af.oid=d.af==='all'?'all':+d.af;S.af.gname=d.ag||null;return render();}
+  if(d.unpick){S.pick.delete(isNaN(d.unpick)?d.unpick:+d.unpick);resetSend();return render();}
+  if(d.skind){S.send.kind=d.skind;resetSend();return render();}
+  if(d.btype){const b=brand(S.bSel);b.type=d.btype;if(b.type==='와이드형')b.buttons=b.buttons.slice(0,2);return render();}
+  if(d.var){const ta=document.getElementById(d.into),s=ta.selectionStart;ta.value=ta.value.slice(0,s)+`#{${d.var}}`+ta.value.slice(ta.selectionEnd);ta.dispatchEvent(new Event('input',{bubbles:true}));ta.focus();return;}
+  if(d.adel!==undefined){const a=editAlim();a.buttons.splice(+d.adel,1);return render();}
+  if(d.bdel!==undefined){brand(S.bSel).buttons.splice(+d.bdel,1);return render();}
+  if(d.bopen){S.bOpen=S.bOpen===d.bopen?null:d.bopen;S.rFilter='전체';return render();}
+  if(d.rf){S.rFilter=d.rf;return render();}
+  if(d.resend){const b=findRow(d.resend),fails=b.logs.filter(l=>l.result==='실패').map(l=>l.phone);
+    S.pick=new Set(people().filter(c=>fails.includes(c.phone)).map(c=>c.id));S.send.kind=b.kind;if(b.kind==='alim')S.send.tid=S.alim.find(x=>b.title.includes(x.name))?.id||S.weeklyTid;resetSend();toast(`실패한 ${fails.length}명을 다시 골랐습니다.`);return go('send');}
+  if(d.unres){const b=findRow(d.unres),orig=S.batches.find(x=>x.id===b.bid);if(minsLeft(b.at)<5)return toast('전송 5분 전부터는 삭제할 수 없습니다.');if(!t.dataset.armed){t.dataset.armed='1';t.textContent='한 번 더';return;}orig.logs=orig.logs.filter(l=>!b.logs.includes(l));if(!orig.logs.length)S.batches=S.batches.filter(x=>x!==orig);toast(`${b.channels[0]} 예약을 삭제했습니다.`);return render();}
+  if(d.ropen){S.rOpen=S.rOpen===d.ropen?null:d.ropen;return render();}
+  if(d.chmenu||d.gmenu){const k=d.chmenu||d.gmenu;S.ch.menu=S.ch.menu===k?null:k;return render();}
+  if(d.chadd){const g=S.cgroups.find(x=>x.id===d.g);g.chs.push(d.chadd);S.ch.menu=null;toast(`「${g.name}」 그룹에 넣었습니다.`);return render();}
+  if(d.chout){const g=S.cgroups.find(x=>x.id===d.g);g.chs=g.chs.filter(x=>x!==d.chout);S.ch.menu=null;toast(`「${g.name}」 그룹에서 뺐습니다.`);return render();}
+  if(d.chdel){if(t.dataset.armed){S.channels=S.channels.filter(c=>c.id!==d.chdel);S.cgroups.forEach(g=>g.chs=g.chs.filter(x=>x!==d.chdel));S.ch.menu=null;toast('채널 연동을 해제했습니다.');return render();}t.dataset.armed='1';t.textContent='한 번 더 누르면 해제';return;}
+  if(d.gpick){S.ch.gSel=d.gpick;S.ch.menu=null;return render();}
+  if(d.ginvite){S.ch.menu=null;render();return inviteModal(d.ginvite);}
+  if(d.grename){S.ch.menu=null;render();return groupModal(S.cgroups.find(g=>g.id===d.grename));}
+  if(d.gdel){const g=S.cgroups.find(x=>x.id===d.gdel);if(t.dataset.armed){S.cgroups=S.cgroups.filter(x=>x!==g);S.ch.menu=null;S.ch.gSel=S.cgroups[0]?.id;toast(`「${g.name}」 그룹을 지웠습니다.`);return render();}t.dataset.armed='1';t.textContent=g.chs.length?`채널 ${g.chs.length}개가 빠집니다 · 한 번 더`:'한 번 더 누르면 삭제';return;}
+  if(d.iaccept){const i=S.invites.find(x=>x.id===+d.iaccept);i.st='수락됨';const id='c'+Date.now();S.channels.push({id,name:i.name,pf:i.pf,date:nowStr().slice(2,10).replace(/-/g,'.'),oid:S.offices.find(o=>o.channel===i.pf)?.id||null});
+    S.cgroups.find(g=>g.id===i.gid)?.chs.push(id);const o=S.offices.find(o=>o.channel===i.pf);if(o)o.sender='연결됨';closeModal();toast(`${i.name} 채널이 그룹에 들어왔습니다.`);render();return invitesModal();}
+  if(d.retry){const o=office(+d.retry);o.bill='정상';const ti=tierOf(o.count);S.pays.push({oid:o.id,tier:tierLabel(ti),amount:S.tiers[ti].price,card:o.card?`${o.card.brand} ··${o.card.last4}`:'',at:nowStr(),kind:'수동 재시도',st:'승인',no:String(Date.now()).slice(-8)});toast(`${o.name} 재결제 승인 (데모)`);return render();}
+  const a=alim(S.aSel);
+  switch(t.id){
+    case 'ch-link':chLinkModal();break;
+    case 'cl-send':if(!/^@\S+/.test(document.getElementById('cl-pf').value.trim()))return toast('채널 ID를 @로 시작하게 넣어 주세요.');if(!normPhone(document.getElementById('cl-ph').value))return toast('관리자 휴대폰 번호를 확인해 주세요.');toast('데모: 카카오톡으로 인증번호를 보냈습니다. 아무 6자리나 넣으세요.');break;
+    case 'cl-ok':{const pf=document.getElementById('cl-pf').value.trim();if(!/^@\S+/.test(pf))return toast('채널 ID를 @로 시작하게 넣어 주세요.');if(!/^\d{6}$/.test(document.getElementById('cl-code').value))return toast('인증번호 6자리를 넣어 주세요.');
+      if(S.channels.some(c=>c.pf===pf))return toast('이미 연동된 채널입니다.');S.channels.push({id:'c'+Date.now(),name:pf.slice(1),pf,date:nowStr().slice(2,10).replace(/-/g,'.'),oid:null});closeModal();toast('채널을 연동했습니다. ⋮ 메뉴에서 그룹에 넣으세요.');render();break;}
+    case 'g-help':toast('채널 그룹: 여러 채널이 알림톡 템플릿을 함께 쓰도록 묶는 단위입니다. 템플릿은 그룹에 한 번 등록 · 검수합니다.');break;
+    case 'g-invites':invitesModal();break;
+    case 'g-create':groupModal(null);break;
+    case 'gm-ok':{const v=document.getElementById('gm-name').value.trim();if(!v)return toast('그룹 이름을 넣어 주세요.');if(S.cgroups.some(g=>g.name===v&&g.id!==t.dataset.g))return toast('같은 이름의 그룹이 있습니다.');
+      if(t.dataset.g){S.cgroups.find(g=>g.id===t.dataset.g).name=v;toast('그룹 이름을 바꿨습니다.');}else{const g={id:'g'+Date.now(),name:v,chs:['c0'],date:nowStr().slice(2,10).replace(/-/g,'.')};S.cgroups.push(g);S.ch.gSel=g.id;toast(`「${v}」 그룹을 만들었습니다.`);}closeModal();render();break;}
+    case 'iv-ok':{const pf=document.getElementById('iv-pf').value.trim(),nm=document.getElementById('iv-name').value.trim()||pf.slice(1);if(!/^@\S+/.test(pf))return toast('채널 ID를 @로 시작하게 넣어 주세요.');
+      S.invites.unshift({id:Date.now(),gid:t.dataset.g,pf,name:nm,at:nowStr(),st:'수락 대기'});closeModal();toast('초대를 보냈습니다. 채널 관리자가 수락하면 그룹에 들어옵니다.');render();break;}
+    case 'r-refresh':render();toast('예약내역을 새로 불러왔습니다.');break;
+    case 'nhn-test':{const out=document.getElementById('nhn-res');out.textContent='확인 중…';
+      fetch('/api/nhn-check').then(r=>r.json()).then(j=>{out.textContent=(j.ok?'✓ ':'✕ ')+j.알림+(j.결과코드!=null?` (코드 ${j.결과코드}${j.결과문구?' · '+j.결과문구:''})`:'');out.style.color=j.ok?'var(--good-ink)':'var(--bad-ink)';})
+        .catch(()=>{out.textContent='✕ 서버 함수에 닿지 못했습니다 — 사이트가 함수까지 배포되었는지 확인해 주세요.';out.style.color='var(--bad-ink)';});break;}
+    case 'hf-xls':toast(`데모: 지금 보이는 ${document.querySelectorAll('.ctable > tbody > tr.hov').length}줄을 엑셀 파일로 내려받습니다.`);break;
+    case 'invite':toast('데모: 세무사에게 가입 초대 링크가 나갑니다.');break;
+    case 'new-alim':{const n={id:S.nextTid++,code:'TAX_NEW_'+S.nextTid,name:'',category:'공지/안내',msgType:'기본형',kind:'선택 안 함',regAt:new Date().toISOString().slice(0,10),status:'작성중',approvedAt:null,fallback:true,body:'[#{세무사명}] \n\n#{고객명} 대표님, ',buttons:['자세히 보기'],approved:null};
+      S.alim.push(n);S.aSel=n.id;render();document.getElementById('a-name').focus();break;}
+    case 'copy-alim':{const n={...a,id:S.nextTid++,code:a.code+'_V2',name:a.name+' (수정본)',regAt:new Date().toISOString().slice(0,10),status:'작성중',approvedAt:null,approved:null,buttons:[...a.buttons]};S.alim.push(n);S.aSel=n.id;toast('복사했습니다. 고친 뒤 검수요청을 누르세요.');render();break;}
+    case 'req-review':if(!a.name.trim()||!a.body.trim())return toast('템플릿명과 내용을 넣어 주세요.');if(a.body.length>1000)return toast('내용이 1,000자를 넘습니다.');
+      if(S.alim.some(x=>x.id!==a.id&&x.name===a.name))return toast('같은 이름의 템플릿이 이미 있습니다.');a.status='검수중';a.reject=null;toast('카카오 검수를 요청했습니다. 보통 영업일 1~3일 걸립니다.');render();break;
+    case 'approve':a.status='승인';a.approvedAt=new Date().toISOString().slice(0,10);a.approved={body:a.body,buttons:[...a.buttons],kind:a.kind,emph:a.emph,emphSub:a.emphSub,msgType:a.msgType,extra:a.extra,img:a.img};toast('승인되었습니다. 세무사 화면에 바로 올라갑니다.');render();break;
+    case 'reject':a.status='반려';a.reject='데모 반려: 광고성으로 볼 수 있는 표현이 들어 있음';render();break;
+    case 'set-weekly':S.weeklyTid=S.aSel;toast(`'${a.name}'을(를) 매주 발송용으로 정했습니다.`);render();break;
+    case 'a-addbtn':editAlim().buttons.push('');render();break;
+    case 'new-brand':{const n={id:S.nextTid++ +1000,name:'',type:'텍스트형',img:null,saved:null,body:'',buttons:[]};S.brand.push(n);S.bSel=n.id;render();document.getElementById('b-name').focus();break;}
+    case 'b-addbtn':brand(S.bSel).buttons.push('');render();break;
+    case 'b-imgdel':brand(S.bSel).img=null;render();break;
+    case 'save-brand':{const b=brand(S.bSel);if(!b.name.trim()||!b.body.trim())return toast('템플릿명과 내용을 넣어 주세요.');
+      const max=b.type==='와이드형'?76:1300;if(b.body.length>max)return toast(`내용이 ${max}자를 넘습니다.`);b.saved=new Date().toISOString().slice(0,10);toast('저장했습니다. 카카오톡 전송에서 바로 쓸 수 있습니다.');render();break;}
+    case 'del-brand':if(t.dataset.armed){S.brand=S.brand.filter(x=>x.id!==S.bSel);S.bSel=S.brand[0]?.id;if(!S.brand.length){S.brand.push({id:S.nextTid++ +1000,name:'',type:'텍스트형',img:null,saved:null,body:'',buttons:[]});S.bSel=S.brand[0].id;}toast('지웠습니다.');render();}
+      else{t.dataset.armed='1';t.textContent='한 번 더 누르면 삭제';}break;
+    case 'pick-clear':S.pick.clear();resetSend();render();break;
+    case 'do-check':S.send.checked=true;S.send.armed=false;render();break;
+    case 'do-send':{const sd=S.send;if(!sd.armed){sd.armed=true;return render();}
+      const m=current(),tg=targets().all,at=sd.when==='now'?nowStr():sd.at.replace('T',' ');
+      const b={id:Date.now(),channels:sd.kind==='brand'||sd.channel==='ops'?[OPS.channel]:[...new Set(tg.map(c=>c.oid&&office(c.oid).sender==='연결됨'?office(c.oid).channel:OPS.channel))],at,made:nowStr(),kind:sd.kind,mtype:mtypeOf(m),body:m.body,src:'운영사',title:m.name,offices:[...new Set(tg.map(c=>c.oid?office(c.oid).name:c.tax?'가입자 주소록':'직접 입력'))],logs:mkLogs(tg),reserved:sd.when==='later'};
+      if(!b.reserved){b.logs.forEach(l=>l.result='대기');setTimeout(()=>{b.logs.forEach(l=>l.result='성공');if(S.view==='sent')render();},4000);}
+      S.batches.unshift(b);S.pick.clear();S.send={...sd,vars:{},manual:'',when:'now',at:'',checked:false,armed:false};
+      toast(b.reserved?`${at}에 보내도록 예약했습니다.`:`${tg.length}명에게 보냈습니다.`);S.bOpen=null;S.hf.to=at.slice(0,10)>S.hf.to?at.slice(0,10):S.hf.to;S.hf.kind='전체';S.hf.q='';go(b.reserved?'reserved':'sent');break;}
+  }
+});
+document.addEventListener('submit',e=>{
+  e.preventDefault();
+  if(e.target.id==='tquick'){const nm=document.getElementById('tk-n').value.trim(),ph=normPhone(document.getElementById('tk-p').value),biz=document.getElementById('tk-b').value.trim(),g=document.getElementById('tk-g').value;
+    if(!nm)return toast('이름을 넣어 주세요.');if(!ph)return toast('휴대폰 번호 꼴을 확인해 주세요. 예: 010-1234-5678');if(S.tax.some(x=>x.phone===ph))return toast('가입자 주소록에 이미 있는 번호입니다.');
+    S.tax.unshift({id:'t'+(S.nextT++),tax:true,oid:null,name:nm,phone:ph,biz,gname:g,optout:false,adOk:true,memo:''});toast(`${g}에 ${nm} 세무사님을 넣었습니다.`);render();}
+  if(e.target.id==='quick'){const oid=+document.getElementById('qk-o').value,nm=document.getElementById('qk-n').value.trim(),ph=normPhone(document.getElementById('qk-p').value),g=document.getElementById('qk-g').value.trim()||office(oid).groups[0];
+    if(!nm)return toast('이름을 넣어 주세요.');if(!ph)return toast('휴대폰 번호 꼴을 확인해 주세요. 예: 010-1234-5678');
+    if(S.contacts.some(c=>c.oid===oid&&c.phone===ph))return toast('이 가입자 주소록에 이미 있는 번호입니다.');
+    const o=office(oid);if(!o.groups.includes(g))o.groups.push(g);
+    S.contacts.unshift({id:S.nextCid++,oid,name:nm,phone:ph,biz:'',gname:g,optout:false,adOk:true});toast(`${o.name} › ${g}에 ${nm} 님을 넣었습니다.`);render();}
+});
+document.addEventListener('keydown',e=>{const d=e.target.dataset||{};if(e.key==='Enter'&&(d.asel||d.bsel||d.gpick)){e.target.click();}});
+document.addEventListener('input',e=>{
+  const id=e.target.id,d=e.target.dataset;
+  if(id==='ch-q'){S.ch.q=e.target.value;keep('ch-q');}
+  if(id==='g-q'){S.ch.gq=e.target.value;keep('g-q');}
+  if(id==='tq'){S.tf.q=e.target.value;keep('tq');}
+  if(id==='aq'){S.af.q=e.target.value;keep('aq');}
+  if(id==='rf-q'){S.rf.q=e.target.value;keep('rf-q');}
+  if(id==='hf-q'){S.hf.q=e.target.value;keep('hf-q');}
+  if(id==='s-manual'){S.send.manual=e.target.value;resetSend();keep('s-manual');}
+  if(d.svar!==undefined){S.send.vars[d.svar]=e.target.value;resetSend();keep(id);}
+  if(['a-name','a-body','a-emph','a-emphsub','a-extra'].includes(id)||d.abtn!==undefined){
+    const a=alim(S.aSel),was=a.status;
+    if(id==='a-name')a.name=e.target.value;if(id==='a-body')a.body=e.target.value;if(id==='a-emph')a.emph=e.target.value;if(id==='a-emphsub')a.emphSub=e.target.value;if(id==='a-extra')a.extra=e.target.value;if(d.abtn!==undefined)a.buttons[+d.abtn]=e.target.value;
+    if(was==='검수중'||was==='반려'){a.status='수정중';keep(id);}
+    const c=document.getElementById('a-cnt');if(c){c.textContent=a.body.length;c.parentElement.classList.toggle('over',a.body.length>1000);}repv();}
+  if(['b-name','b-body'].includes(id)||d.bbtn!==undefined){
+    const b=brand(S.bSel);if(id==='b-name')b.name=e.target.value;if(id==='b-body')b.body=e.target.value;if(d.bbtn!==undefined)b.buttons[+d.bbtn]=e.target.value;
+    const c=document.getElementById('b-cnt'),max=b.type==='와이드형'?76:1300;if(c){c.textContent=b.body.length;c.parentElement.classList.toggle('over',b.body.length>max);}repv();}
+  if(d.tier!==undefined)S.tiers[+d.tier].price=parseInt(e.target.value.replace(/\D/g,''))||0;
+});
+document.addEventListener('change',e=>{
+  const id=e.target.id,d=e.target.dataset;
+  if(d.pick){const k=isNaN(d.pick)?d.pick:+d.pick;e.target.checked?S.pick.add(k):S.pick.delete(k);resetSend();return render();}
+  if(id==='tpick-all'){taxRows().forEach(c=>e.target.checked?S.pick.add(c.id):S.pick.delete(c.id));resetSend();return render();}
+  if(id==='pick-all'){bookRows().forEach(c=>e.target.checked?S.pick.add(c.id):S.pick.delete(c.id));resetSend();return render();}
+  if(id==='hide-opt'){S.af.hideOpt=e.target.checked;return render();}
+  if(id==='pv-office'){S.pvOffice=+e.target.value;repv();}
+  if(id==='a-cat')alim(S.aSel).category=e.target.value;
+  if(e.target.name==='a-kind'){const a=alim(S.aSel);a.kind=e.target.value;if(a.status==='검수중'||a.status==='반려')a.status='수정중';return render();}
+  if(id==='a-fb')alim(S.aSel).fallback=e.target.checked;
+  if(id==='a-mtype'){const a=alim(S.aSel);a.msgType=e.target.value;if(a.status==='검수중'||a.status==='반려')a.status='수정중';return render();}
+  if(id==='a-img'&&e.target.files[0]){const r=new FileReader();r.onload=ev=>{alim(S.aSel).img=ev.target.result;render();};r.readAsDataURL(e.target.files[0]);}
+  if(id==='b-img'&&e.target.files[0]){const r=new FileReader();r.onload=ev=>{brand(S.bSel).img=ev.target.result;render();};r.readAsDataURL(e.target.files[0]);}
+  if(id==='s-t'){const v=e.target.value?+e.target.value:null;if(S.send.kind==='brand')S.send.bid=v;else S.send.tid=v;S.send.vars={};resetSend();return render();}
+  if(e.target.name==='ch'){S.send.channel=e.target.value;resetSend();return render();}
+  if(id==='s-fb'){S.send.fallback=e.target.checked;resetSend();}
+  if(e.target.name==='when'){S.send.when=e.target.value;resetSend();return render();}
+  if(id==='s-at'){S.send.at=e.target.value;resetSend();return render();}
+  if(id==='rf-from'){S.rf.from=e.target.value;return render();}
+  if(id==='rf-to'){S.rf.to=e.target.value;return render();}
+  if(id==='hf-from'){S.hf.from=e.target.value;return render();}
+  if(id==='hf-to'){S.hf.to=e.target.value;return render();}
+  if(id==='hf-kind'){S.hf.kind=e.target.value;return render();}
+  if(id==='hf-src'){S.hf.src=e.target.value;return render();}
+  if(id==='sch-day'){S.schedule.day=e.target.value;render();}
+  if(id==='sch-time'){S.schedule.time=e.target.value;render();}
+  if(id==='pf-month'){S.pf.month=e.target.value;return render();}
+  if(id==='pf-st'){S.pf.st=e.target.value;return render();}
+  if(id==='pf-oid'){S.pf.oid=e.target.value;return render();}
+  if(id==='bill-day'){S.billDay=+e.target.value;render();}
+  if(d.tier!==undefined){toast('요금 구간을 바꿨습니다.');render();}
+});
+seed();
+seedPays();
+render();
+</script>
+</body>
+</html>

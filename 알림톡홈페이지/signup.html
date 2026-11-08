@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>회원가입 · 세무사 알림톡</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="auth.css">
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="/"><i>알림</i>세무사 알림톡</a>
+  <nav><a href="/#apply">서비스 신청</a><a href="login.html">로그인</a></nav>
+</header>
+<main>
+  <section class="box wide" aria-labelledby="t">
+    <h1 id="t">세무사 회원가입</h1>
+    <p class="sub">가입하면 관리센터에서 주소록을 올리고, 카드를 등록해 매월 자동으로 결제할 수 있습니다.</p>
+    <p class="demo">지금은 데모입니다. 회원 정보가 이 브라우저에만 저장됩니다.</p>
+    <form id="f" novalidate>
+      <div id="msg" class="alert bad" role="alert" hidden></div>
+
+      <div class="section">로그인 정보</div>
+      <div class="fl"><label for="email">이메일 (아이디)</label><input id="email" class="inp" type="email" autocomplete="email" placeholder="office@example.com"><span class="hint" id="h-email">로그인할 때와 이용료 영수증을 받을 때 씁니다.</span></div>
+      <div class="two">
+        <div class="fl"><label for="pw">비밀번호</label><input id="pw" class="inp" type="password" autocomplete="new-password" placeholder="8자 이상"><span class="hint" id="h-pw">영문 · 숫자를 섞어 8자 이상</span></div>
+        <div class="fl"><label for="pw2">비밀번호 확인</label><input id="pw2" class="inp" type="password" autocomplete="new-password" placeholder="한 번 더"><span class="hint" id="h-pw2">&nbsp;</span></div>
+      </div>
+
+      <div class="section">사무소 정보</div>
+      <div class="two">
+        <div class="fl"><label for="name">대표 세무사 이름</label><input id="name" class="inp" autocomplete="name" placeholder="홍길동"></div>
+        <div class="fl"><label for="office">사무소명</label><input id="office" class="inp" autocomplete="organization" placeholder="○○세무회계"></div>
+      </div>
+      <div class="fl"><label for="biz">사업자등록번호</label><input id="biz" class="inp" inputmode="numeric" placeholder="000-00-00000" maxlength="12"><span class="hint" id="h-biz">세금계산서 발행과 사무소 확인에 씁니다.</span></div>
+      <div class="fl"><label for="phone">휴대폰</label>
+        <div class="row"><input id="phone" class="inp" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000"><button class="btn" type="button" id="send-code">인증번호 받기</button></div>
+        <div class="row" id="code-row" hidden><input id="code" class="inp" inputmode="numeric" maxlength="6" placeholder="인증번호 6자리"><button class="btn" type="button" id="check-code">확인</button></div>
+        <span class="hint" id="h-phone">결제 실패 · 발송 알림을 받습니다.</span></div>
+      <div class="fl"><label for="channel">카카오톡 채널 ID <span class="opt">(선택 · 나중에 넣어도 됩니다)</span></label><input id="channel" class="inp" placeholder="@사무소채널"><span class="hint">알림톡이 나갈 사무소 채널입니다. 가입 뒤 채널 연결을 도와드립니다.</span></div>
+
+      <div class="terms">
+        <label class="chk all"><input type="checkbox" id="all"> 아래 약관에 모두 동의합니다</label>
+        <div class="between"><label class="chk"><input type="checkbox" class="t" id="t1" data-req="1"> [필수] 서비스 이용약관</label><a href="#" data-term="이용약관">보기</a></div>
+        <div class="between"><label class="chk"><input type="checkbox" class="t" id="t2" data-req="1"> [필수] 개인정보 수집 · 이용 동의</label><a href="#" data-term="개인정보">보기</a></div>
+        <div class="between"><label class="chk"><input type="checkbox" class="t" id="t3" data-req="1"> [필수] 고객 주소록 처리 위탁 동의</label><a href="#" data-term="위탁">보기</a></div>
+        <div class="between"><label class="chk"><input type="checkbox" class="t" id="t4"> [선택] 새 기능 · 혜택 안내 받기</label></div>
+        <p class="hint" id="term-text" hidden></p>
+      </div>
+
+      <button class="btn primary" type="submit" id="go">가입하기</button>
+    </form>
+    <p class="foot">이미 가입하셨나요? <a href="login.html">로그인</a></p>
+  </section>
+</main>
+<script src="auth.js"></script>
+<script>
+  var $ = function (id) { return document.getElementById(id); };
+  var verified = false, sentCode = null;
+  var TERMS = {
+    이용약관: '세무사 알림톡은 세무사 사무소가 고객에게 보내는 카카오 알림톡 발송을 대행합니다. 이용료는 매월 등록 카드로 자동 결제됩니다. (실제 약관 전문은 서비스 열기 전에 넣습니다)',
+    개인정보: '수집 항목: 이메일, 이름, 사무소명, 사업자등록번호, 휴대폰. 목적: 회원 확인, 이용료 결제, 서비스 안내. 보관: 탈퇴 후 5년(전자상거래법). (실제 문구는 서비스 열기 전에 넣습니다)',
+    위탁: '세무사님이 올리시는 고객 주소록(이름 · 휴대폰 · 상호)을 알림톡 발송 목적으로만 처리하며, 발송사(카카오 공식 딜러사)에 발송을 맡깁니다. (실제 문구는 서비스 열기 전에 넣습니다)'
+  };
+  var digits = function (s) { return String(s).replace(/\D/g, ''); };
+  var phoneOk = function (s) { return /^01[016789]\d{7,8}$/.test(digits(s)); };
+  /* 사업자등록번호 검증 — 국세청이 쓰는 가중치 셈 */
+  function bizOk(s) {
+    var d = digits(s); if (d.length !== 10) return false;
+    var w = [1,3,7,1,3,7,1,3,5], sum = 0;
+    for (var i = 0; i < 9; i++) sum += +d[i] * w[i];
+    sum += Math.floor(+d[8] * 5 / 10);
+    return (10 - sum % 10) % 10 === +d[9];
+  }
+  function hint(id, text, tone) { var h = $('h-' + id); h.textContent = text; h.className = 'hint' + (tone ? ' ' + tone : ''); $(id).classList.toggle('err', tone === 'bad'); }
+
+  $('biz').addEventListener('input', function (e) {
+    var d = digits(e.target.value).slice(0, 10);
+    e.target.value = d.length > 5 ? d.slice(0,3) + '-' + d.slice(3,5) + '-' + d.slice(5) : d.length > 3 ? d.slice(0,3) + '-' + d.slice(3) : d;
+    if (d.length === 10) hint('biz', bizOk(d) ? '올바른 번호입니다.' : '번호를 다시 확인해 주세요.', bizOk(d) ? 'good' : 'bad');
+  });
+  $('pw2').addEventListener('input', function () { if ($('pw2').value) hint('pw2', $('pw').value === $('pw2').value ? '같습니다.' : '비밀번호가 다릅니다.', $('pw').value === $('pw2').value ? 'good' : 'bad'); });
+  $('phone').addEventListener('input', function () { verified = false; $('code-row').hidden = true; });
+  $('send-code').onclick = function () {
+    if (!phoneOk($('phone').value)) return hint('phone', '휴대폰 번호를 확인해 주세요. 예: 010-1234-5678', 'bad');
+    sentCode = String(Math.floor(100000 + Math.random() * 900000));
+    $('code-row').hidden = false; $('code').focus();
+    hint('phone', '데모: 문자 대신 여기에 인증번호를 보여 드립니다 → ' + sentCode, '');
+  };
+  $('check-code').onclick = function () {
+    verified = $('code').value === sentCode;
+    hint('phone', verified ? '휴대폰 인증이 끝났습니다.' : '인증번호가 맞지 않습니다.', verified ? 'good' : 'bad');
+    if (verified) $('code-row').hidden = true;
+  };
+  var ts = Array.prototype.slice.call(document.querySelectorAll('.t'));
+  $('all').onchange = function (e) { ts.forEach(function (t) { t.checked = e.target.checked; }); };
+  ts.forEach(function (t) { t.onchange = function () { $('all').checked = ts.every(function (x) { return x.checked; }); }; });
+  document.querySelectorAll('[data-term]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); var p = $('term-text'); p.textContent = TERMS[a.dataset.term]; p.hidden = false; }; });
+
+  $('f').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var msg = $('msg'), bad = [];
+    var email = $('email').value.trim().toLowerCase(), pw = $('pw').value;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { bad.push('이메일 주소를 확인해 주세요.'); hint('email', '이메일 주소를 확인해 주세요.', 'bad'); }
+    if (pw.length < 8 || !/[a-zA-Z]/.test(pw) || !/\d/.test(pw)) { bad.push('비밀번호는 영문과 숫자를 섞어 8자 이상이어야 합니다.'); hint('pw', '영문 · 숫자를 섞어 8자 이상', 'bad'); }
+    if (pw !== $('pw2').value) { bad.push('비밀번호 확인이 다릅니다.'); hint('pw2', '비밀번호가 다릅니다.', 'bad'); }
+    if (!$('name').value.trim()) bad.push('대표 세무사 이름을 넣어 주세요.');
+    if (!$('office').value.trim()) bad.push('사무소명을 넣어 주세요.');
+    if (!bizOk($('biz').value)) { bad.push('사업자등록번호를 확인해 주세요.'); hint('biz', '번호를 다시 확인해 주세요.', 'bad'); }
+    if (!verified) bad.push('휴대폰 인증을 마쳐 주세요.');
+    var ch = $('channel').value.trim(); if (ch && ch[0] !== '@') ch = '@' + ch;
+    if (ts.some(function (t) { return t.dataset.req && !t.checked; })) bad.push('필수 약관에 동의해 주세요.');
+    if (bad.length) { msg.className = 'alert bad'; msg.innerHTML = bad.map(function (x) { return '· ' + x.replace(/</g,'&lt;'); }).join('<br>'); msg.hidden = false; msg.scrollIntoView({ block: 'center', behavior: 'smooth' }); return; }
+    var b = $('go'); b.disabled = true; b.textContent = '가입하는 중…';
+    try {
+      await AlimAuth.signUp({ email: email, password: pw, name: $('name').value.trim(), office: $('office').value.trim(), bizNo: digits($('biz').value), phone: digits($('phone').value), channel: ch, marketing: $('t4').checked });
+      location.replace('login.html?joined=' + encodeURIComponent(email));
+    } catch (err) { msg.className = 'alert bad'; msg.textContent = err.message; msg.hidden = false; b.disabled = false; b.textContent = '가입하기'; }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+# 세무사 알림톡 (alimtalk.kr) — Netlify 설정
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# 주소를 .html 없이 — alimtalk.kr/login, /signup, /app, /admin
+[[redirects]]
+  from = "/login"
+  to = "/login.html"
+  status = 200
+[[redirects]]
+  from = "/signup"
+  to = "/signup.html"
+  status = 200
+[[redirects]]
+  from = "/app"
+  to = "/app.html"
+  status = 200
+[[redirects]]
+  from = "/admin"
+  to = "/admin.html"
+  status = 200
+
+# 서버 함수는 /api/... 로 부른다
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# 관리센터 · 관제탑은 검색에 나오지 않게
+[[headers]]
+  for = "/admin*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"

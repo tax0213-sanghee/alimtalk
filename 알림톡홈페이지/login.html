@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>로그인 · 세무사 알림톡</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="auth.css">
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="/"><i>알림</i>세무사 알림톡</a>
+  <nav><a href="/#apply">서비스 신청</a><a href="signup.html">회원가입</a></nav>
+</header>
+<main>
+  <section class="box" aria-labelledby="t">
+    <h1 id="t">관리센터 로그인</h1>
+    <p class="sub">주소록 관리, 카카오톡 전송, 이용료 결제를 한 곳에서 합니다.</p>
+    <p class="demo">지금은 데모입니다. 회원 정보가 이 브라우저에만 저장됩니다.</p>
+    <form id="f" novalidate>
+      <div id="msg" class="alert bad" role="alert" hidden></div>
+      <div class="fl"><label for="email">이메일</label><input id="email" class="inp" type="email" autocomplete="username" placeholder="office@example.com" required></div>
+      <div class="fl"><label for="pw">비밀번호</label><input id="pw" class="inp" type="password" autocomplete="current-password" placeholder="비밀번호" required></div>
+      <div class="between">
+        <label class="chk"><input type="checkbox" id="keep" checked> 로그인 상태 유지</label>
+        <a href="#" id="find">비밀번호를 잊으셨나요?</a>
+      </div>
+      <button class="btn primary" type="submit" id="go">로그인</button>
+    </form>
+    <div class="divider">처음이신가요?</div>
+    <a class="btn" style="width:100%" href="signup.html">회원가입</a>
+    <p class="foot">문의 <a href="https://pf.kakao.com/" target="_blank" rel="noopener">카카오톡 채널 상담</a></p>
+  </section>
+</main>
+<script src="auth.js"></script>
+<script>
+  var next = new URLSearchParams(location.search).get('next') || 'app.html';
+  if (!/^[\w.-]+\.html$/.test(next)) next = 'app.html';
+  if (AlimAuth.current()) location.replace(next);
+  var msg = document.getElementById('msg');
+  var q = new URLSearchParams(location.search);
+  if (q.get('joined')) { msg.className = 'alert good'; msg.textContent = '가입되었습니다. 방금 만든 이메일과 비밀번호로 로그인해 주세요.'; msg.hidden = false; document.getElementById('email').value = q.get('joined'); document.getElementById('pw').focus(); }
+  else document.getElementById('email').focus();
+  document.getElementById('find').onclick = function (e) {
+    e.preventDefault(); msg.className = 'alert good';
+    msg.textContent = '데모에서는 비밀번호 찾기를 쓸 수 없습니다. 실서비스에서는 가입한 이메일로 재설정 링크를 보냅니다.'; msg.hidden = false;
+  };
+  document.getElementById('f').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var email = document.getElementById('email').value.trim().toLowerCase(), pw = document.getElementById('pw').value;
+    msg.hidden = true;
+    if (!email || !pw) { msg.className = 'alert bad'; msg.textContent = '이메일과 비밀번호를 넣어 주세요.'; msg.hidden = false; return; }
+    var b = document.getElementById('go'); b.disabled = true; b.textContent = '확인 중…';
+    try { await AlimAuth.signIn(email, pw, document.getElementById('keep').checked); location.replace(next); }
+    catch (err) { msg.className = 'alert bad'; msg.textContent = err.message; msg.hidden = false; b.disabled = false; b.textContent = '로그인'; }
+  });
+</script>
+</body>
+</html>
