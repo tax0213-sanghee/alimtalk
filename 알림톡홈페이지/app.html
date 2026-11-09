@@ -606,6 +606,9 @@ td.tnum{white-space:nowrap}
 .wmini th{height:38px!important}
 .wmini{border-collapse:separate;border-spacing:0}
 .wlist thead th{position:sticky;top:0;z-index:1}
+.ctab{table-layout:fixed}
+.ctab th,.ctab td{text-align:center!important;padding-left:8px;padding-right:8px}
+.ctab td{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 </style>
 </head>
 <body>
@@ -1135,7 +1138,8 @@ function histByContact(){
     </div>
     ${cur?`<section class="card" style="margin:0"><div class="card-h"><h3>${esc(cur.name)}</h3><span class="sub">${esc(cur.biz)} · <span class="tnum">${esc(cur.phone)}</span></span>
       <span class="r small">받은 메시지 <b class="tnum" style="color:var(--ink)">${cur.items.length}</b>건 · 실패 <b class="tnum" style="color:var(--ink)">${cur.items.filter(i=>i.l.result==='실패').length}</b>건</span></div>
-      ${cur.items.length?`<div class="hdetail"><div class="tw"><table style="min-width:0">
+      ${cur.items.length?`<div class="hdetail"><div class="tw"><table class="ctab" style="min-width:0">
+        <colgroup><col style="width:34%"><col style="width:42%"><col style="width:24%"></colgroup>
         <thead><tr><th>발송일자</th><th>템플릿명</th><th>발송결과</th></tr></thead>
         <tbody>${cur.items.map(i=>`<tr class="hov ${sel&&i.h.id===sel.h.id?'sel-row':''}" data-hmsg="${i.h.id}" tabindex="0" style="cursor:pointer"><td class="tnum">${i.h.date.replace(/-/g,'.')}</td><td>${esc(tpl(i.h.tid)?.name||i.h.title)}</td><td>${i.l.result==='실패'?tag('실패','bad'):tag('성공','good')}</td></tr>`).join('')}</tbody></table></div>
         <div>${phone(tpl(sel.h.tid),{name:cur.name,biz:cur.biz},sel.h.vars,sel.l.result==='문자대체'?'카카오톡으로 받지 못해 같은 내용이 문자로 나갔습니다':`${sel.h.date} 받은 내용`)}</div></div>`
