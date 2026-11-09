@@ -219,7 +219,7 @@ input[type="checkbox"],input[type="radio"]{width:16px;height:16px;accent-color:v
 .drop{border:1.5px dashed var(--line);border-radius:6px;padding:18px;text-align:center;color:var(--muted);cursor:pointer}
 .modal.wide{max-width:640px}
 .mapbox{border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:10px;background:#F7F7F9}
-.mapgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mapgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .mapgrid .sel{width:100%;min-width:0}
 table.mini{width:100%;border-collapse:collapse;font-size:12px;background:#fff;border-radius:6px;overflow:hidden}
 table.mini th,table.mini td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
@@ -250,6 +250,96 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background
 }
 @media (max-width:480px){ .stats{grid-template-columns:1fr} }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ── 주소록 관리 (윙고식 2단) ── */
+.bk-sum{margin:0 0 12px}
+.bk-sum b{color:var(--ink)}
+.book{display:grid;grid-template-columns:250px minmax(0,1fr);gap:24px;align-items:start}
+.bk-l{display:flex;flex-direction:column;gap:10px;min-width:0}
+.bk-srch{display:flex;align-items:center;gap:6px;height:40px;background:var(--field);border-radius:6px;padding:0 12px;color:var(--ink);cursor:text}
+.bk-srch input{flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:14px;color:var(--ink);outline:none}
+.bk-srch input::placeholder{color:var(--faint)}
+.bk-srch svg{flex:none;padding-left:10px;box-sizing:content-box;border-left:1px solid var(--line)}
+.bk-srch:focus-within{box-shadow:0 0 0 2px rgb(79 70 229/.3)}
+.bk-panel{border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;flex-direction:column}
+.bk-add{display:flex;gap:6px;padding:10px;background:#F7F7F9;border-bottom:1px solid var(--line)}
+.bk-add .inp{background:var(--card);height:32px}
+.btn.dark{background:#3F3F46;border-color:#3F3F46;color:#fff}
+.btn.dark:hover{background:#18181D;border-color:#18181D;color:#fff}
+.bk-all{display:flex;align-items:center;gap:4px;padding:8px 8px 8px 6px;border-bottom:1px solid var(--line)}
+.bk-all .bk-gn{font-weight:700}
+.bk-all.on .bk-gn{color:var(--brand)}
+.bk-all .fd{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--brand-soft);color:var(--brand);margin-right:6px}
+.bk-list{max-height:420px;overflow-y:auto;padding:6px 0}
+.bk-g{display:flex;align-items:center;gap:2px;padding:0 6px 0 4px}
+.bk-g[aria-current="true"]{background:var(--brand-soft)}
+.bk-g[aria-current="true"] .bk-gn{color:var(--brand);font-weight:700}
+.bk-gn{flex:1;min-width:0;display:flex;align-items:center;gap:6px;border:0;background:none;padding:9px 6px;text-align:left;font-size:13px;color:var(--ink);cursor:pointer;border-radius:4px}
+.bk-gn .nm{min-width:0;overflow-wrap:anywhere}
+.bk-g .bk-gn::before{content:"";flex:none;width:4px;height:4px;background:currentColor;border-radius:1px;margin-right:2px}
+.bk-gn:hover{color:var(--brand)}
+.bk-off{flex:none;font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px;background:var(--card)}
+.ib{flex:none;display:inline-grid;place-items:center;width:26px;height:26px;border:0;background:none;border-radius:4px;color:var(--muted);cursor:pointer}
+.ib:hover{background:var(--field);color:var(--ink)}
+.ib.armed{background:var(--bad-bg);color:var(--bad-ink)}
+.bk-gedit{display:flex;flex-direction:column;gap:6px;padding:8px 10px;background:#F7F7F9;border-block:1px solid var(--line)}
+.bk-gedit .inp{background:var(--card)}
+.bk-wide{height:42px;width:100%}
+.bk-r{min-width:0;display:flex;flex-direction:column;gap:0}
+.bk-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.bk-top .r{margin-left:auto;display:flex;gap:8px;align-items:center;flex:1;justify-content:flex-end;min-width:0}
+.bk-big{height:40px;padding:0 22px;font-size:15px}
+.bk-mid{height:36px;padding:0 16px;font-size:14px}
+.bk-mid.on{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
+.bk-q{flex:0 1 280px;min-width:160px}
+.bk-quick{display:flex;align-items:center;gap:6px;padding:10px 12px;border-top:2px solid var(--ink);background:#F7F7F9}
+.bk-quick b{font-size:13px;color:var(--brand);margin-right:6px;white-space:nowrap}
+.bk-quick .inp,.bk-quick .sel{background:var(--card);flex:1 1 100px;min-width:0}
+.bk-quick .btn{flex:none}
+.bk-quick #qa-phone{flex-basis:140px}
+.bk-quick #qa-title{flex:0 1 80px}
+.bk-quick .sel{flex:0 1 130px}
+.bk-table{overflow-x:auto;border-bottom:1px solid var(--line)}
+.bk-table table{min-width:700px;table-layout:fixed}
+.bk-table table.wide{min-width:760px}
+.bk-table td .hstack{gap:4px;flex-wrap:nowrap}
+.bk-table td .btn.sm{padding:0 8px}
+.bk-table tr.ed td:first-child+td .inp{padding:0 6px}
+.bk-optb{border:1px dashed var(--line);background:none;border-radius:4px;font:inherit;font-size:12px;color:var(--muted);padding:1px 7px;cursor:pointer}
+.bk-optb:hover{border-color:var(--brand);color:var(--brand)}
+button.bk-opt{border:0;cursor:pointer;font:inherit;font-size:12px;font-weight:700}
+.bk-table th{background:#F7F7F9;font-size:13px;font-weight:600;color:var(--muted-strong);text-align:center;padding:11px 8px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);white-space:nowrap}
+.bk-table td{text-align:center;white-space:nowrap;padding:12px 8px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);font-size:13px;color:var(--ink)}
+.bk-table th:last-child,.bk-table td:last-child{border-right:0}
+.bk-table th.ck,.bk-table td.ck{width:48px}
+.bk-table td.el{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0}
+.bk-table tr.off td:not(.ck){color:var(--muted)}
+.bk-table tr.picked td{background:var(--brand-soft)}
+.bk-table tr.ed td{padding:6px 4px;background:#FAFAFB}
+.bk-table tr.ed .inp,.bk-table tr.ed .sel{background:var(--card);height:30px;font-size:13px}
+.bk-table tbody tr:not(.ed):hover td{background:#FAFAFB}
+.bk-table tr.picked:hover td{background:var(--brand-soft)}
+.bk-sort{border:0;background:none;font:inherit;color:inherit;font-weight:inherit;display:inline-flex;align-items:center;gap:4px;cursor:pointer;padding:0}
+.bk-sort svg{opacity:.45}
+.bk-sort.on{color:var(--brand)}.bk-sort.on svg{opacity:1}
+.cc{display:inline-grid;place-items:center;cursor:pointer;position:relative}
+.cc input{position:absolute;opacity:0;width:20px;height:20px;margin:0;cursor:pointer}
+.cc i{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;border:1.5px solid #C9C9D0;color:#C9C9D0;background:var(--card);transition:.12s}
+.cc input:checked+i{background:var(--brand);border-color:var(--brand);color:#fff}
+.cc input:focus-visible+i{outline:2px solid var(--brand);outline-offset:2px}
+.bk-opt{display:inline-block;font-size:12px;font-weight:700;color:var(--bad-ink);background:var(--bad-bg);border-radius:4px;padding:1px 7px}
+.bk-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:16px}
+.bk-foot .r{margin-left:auto;display:flex;gap:8px}
+.bk-line{border-color:var(--brand);color:var(--brand)}
+.bk-selc{color:var(--muted-strong)}.bk-selc b{color:var(--brand)}
+.lnk{border:0;background:none;padding:0;font:inherit;color:var(--brand);font-weight:700;cursor:pointer}
+.lnk:hover{text-decoration:underline}
+.pager{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:22px}
+.pager button{min-width:30px;height:30px;border-radius:50%;border:0;background:none;font:inherit;font-size:13px;color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.pager button:hover:not(:disabled){background:var(--field)}
+.pager button.on{background:#A1A1AA;color:#fff;font-weight:700}
+.pager button:disabled{opacity:.3;cursor:default}
+@media (max-width:900px){.bk-quick{flex-wrap:wrap}.bk-quick b{flex-basis:100%}.book{grid-template-columns:1fr}.bk-list{max-height:220px}.bk-top .r{flex-basis:100%}.bk-q{flex:1}}
 </style>
 </head>
 <body>
@@ -294,22 +384,22 @@ const S={
   /* 운영사(관제탑)가 만들어 카카오 검수를 받은 그룹 템플릿 — 승인본만 세무사 화면에 내려온다 */
   templates:[
     {id:1,name:'주간 세무일정 안내',category:'공지/안내',approvedAt:'2026-08-20',weekly:true,
-     body:'[#{세무사명}] 이번 주 세무일정 안내\n\n안녕하세요, #{고객명} 대표님.\n#{세무사명}입니다.\n\n#{회차제목} 안내를 준비했습니다.\n이번 주 챙기셔야 할 신고·납부 일정과 경영정보를 아래 버튼에서 확인해 주세요.\n\n문의: #{사무실전화}',button:'이번 주 일정 확인하기'},
+     body:'[#{세무사명}] 이번 주 세무일정 안내\n\n안녕하세요, #{고객명} #{직함}.\n#{세무사명}입니다.\n\n#{회차제목} 안내를 준비했습니다.\n이번 주 챙기셔야 할 신고·납부 일정과 경영정보를 아래 버튼에서 확인해 주세요.\n\n문의: #{사무실전화}',button:'이번 주 일정 확인하기'},
     {id:2,name:'부가가치세 신고 자료 요청',category:'업무 요청',approvedAt:'2026-06-11',
-     body:'[#{세무사명}] 부가가치세 신고 자료 요청\n\n#{고객명} 대표님, #{신고기간} 부가가치세 신고를 준비하고 있습니다.\n\n매출·매입 자료(카드전표, 현금영수증, 세금계산서 외 증빙)를 #{제출기한}까지 보내주세요.\n\n문의: #{사무실전화}',button:'제출 자료 목록 보기'},
+     body:'[#{세무사명}] 부가가치세 신고 자료 요청\n\n#{고객명} #{직함}, #{신고기간} 부가가치세 신고를 준비하고 있습니다.\n\n매출·매입 자료(카드전표, 현금영수증, 세금계산서 외 증빙)를 #{제출기한}까지 보내주세요.\n\n문의: #{사무실전화}',button:'제출 자료 목록 보기'},
     {id:3,name:'종합소득세 신고 안내',category:'공지/안내',approvedAt:'2026-04-22',
-     body:'[#{세무사명}] 종합소득세 신고 안내\n\n#{고객명} 대표님, #{귀속연도}년 귀속 종합소득세 신고기한은 #{신고기한}입니다.\n\n신고에 필요한 자료를 아래 버튼에서 확인해 주세요.\n\n문의: #{사무실전화}',button:'필요 자료 확인하기'},
+     body:'[#{세무사명}] 종합소득세 신고 안내\n\n#{고객명} #{직함}, #{귀속연도}년 귀속 종합소득세 신고기한은 #{신고기한}입니다.\n\n신고에 필요한 자료를 아래 버튼에서 확인해 주세요.\n\n문의: #{사무실전화}',button:'필요 자료 확인하기'},
     {id:4,name:'연말정산 자료 제출 요청',category:'업무 요청',approvedAt:'2026-10-30',
-     body:'[#{세무사명}] 연말정산 자료 제출 요청\n\n#{고객명} 대표님, 직원분들의 연말정산 자료를 #{제출기한}까지 보내주세요.\n\n제출 목록은 아래 버튼에서 확인할 수 있습니다.\n\n문의: #{사무실전화}',button:'제출 목록 보기'}
+     body:'[#{세무사명}] 연말정산 자료 제출 요청\n\n#{고객명} #{직함}, 직원분들의 연말정산 자료를 #{제출기한}까지 보내주세요.\n\n제출 목록은 아래 버튼에서 확인할 수 있습니다.\n\n문의: #{사무실전화}',button:'제출 목록 보기'}
   ],
   contacts:[
     ['박성민','010-2381-4410','성민인테리어'],['오지현','010-5520-1873','지현네꽃집'],['한도윤','010-7714-2205','도윤테크'],
     ['서미래','010-3049-9981','미래약국'],['김태호','010-6612-0457','태호정비'],['이수아','010-9283-5530','수아필라테스'],
     ['장민혁','010-4471-3362','민혁푸드'],['윤하늘','010-8820-1149','하늘베이커리'],['조은비','010-2213-7746','은비네일'],
     ['배준서','010-6650-2238','준서건설'],['임채원','010-3378-9012','채원스튜디오'],['신동하','010-5591-6623','동하물류']
-  ].map((c,i)=>({id:i+1,name:c[0],phone:c[1],biz:c[2],optout:i===8,gid:i<7?1:i<10?2:i===10?3:null})),
+  ].map((c,i)=>({id:i+1,name:c[0],phone:c[1],title:i===3?'약사님':i===5?'원장님':'대표님',biz:c[2],optout:i===8,gid:i<7?1:i<10?2:i===10?3:null})),
   groups:[{id:1,name:'기장고객',send:true},{id:2,name:'신고대리',send:true},{id:3,name:'해지예정',send:false}],
-  gfilter:'all', sel:new Set(), renaming:false, nextGid:10, nextId:100,
+  gfilter:'all', sel:new Set(), renaming:false, gq:'', gsort:'made', csort:{k:null,dir:1}, page:1, editMode:false, nextGid:10, nextId:100,
   tSel:1,
   send:{tid:null,mode:'groups',gids:new Set([1,2]),picked:[],vars:{},when:'now',at:'',checked:false,armed:false},
   reserved:[], hView:'date', hOpen:null, hContact:null, hMsg:null, hq:'',
@@ -340,14 +430,14 @@ const normPhone=p=>{const d=String(p).replace(/\D/g,'');if(!/^01[016789]\d{7,8}$
 function groupByName(name){name=String(name||'').trim();if(!name)return null;let g=S.groups.find(x=>x.name===name);if(!g){g={id:S.nextGid++,name,send:true};S.groups.push(g);}return g.id;}
 const tpl=id=>S.templates.find(t=>t.id===id);
 const weekly=()=>S.templates.find(t=>t.weekly);
-const AUTO_VARS=['세무사명','고객명','상호','회차제목','사무실전화'];
+const AUTO_VARS=['세무사명','고객명','직함','상호','회차제목','사무실전화'];
 const varsOf=b=>[...new Set([...String(b).matchAll(/#\{(.+?)\}/g)].map(m=>m[1]))];
 const extraVars=b=>varsOf(b).filter(v=>!AUTO_VARS.includes(v));
 function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2600);}
 
 function fill(body,contact,extra={}){
   const c=contact||{name:'박성민',biz:'성민인테리어'}, o=S.office;
-  const vals={'세무사명':o.name,'고객명':c.name,'상호':c.biz,'회차제목':S.issue.title,'사무실전화':o.phone,...extra};
+  const vals={'세무사명':o.name,'고객명':c.name,'직함':c.title||'대표님','상호':c.biz,'회차제목':S.issue.title,'사무실전화':o.phone,...extra};
   return esc(body).replace(/#\{(.+?)\}/g,(m,k)=>`<span class="v">${esc(vals[k]||m)}</span>`);
 }
 function phone(t,contact,extra,cap){
@@ -420,48 +510,108 @@ function vKakao(){
 }
 
 function groupOptions(sel){return `<option value="">미지정</option>`+S.groups.map(g=>`<option value="${g.id}" ${g.id===sel?'selected':''}>${esc(g.name)}</option>`).join('');}
+const BI={
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  folder:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  pen:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4z"/>',
+  x:'<circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/>',
+  sort:'<path d="M7 4v16M3 16l4 4 4-4"/><path d="M14 6h7M14 11h5M14 16h3"/>',
+  check:'<path d="m5 12 5 5 9-10"/>'
+};
+const bi=(n,s=16)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${BI[n]}</svg>`;
+const PAGE=15;
+function bookRows(){
+  const q=S.q.trim().replace(/-/g,''),k=S.csort.k,dir=S.csort.dir;
+  let rows=S.contacts.filter(c=>inFilter(c)&&(!q||(c.name+c.phone.replace(/-/g,'')+c.biz).includes(q)));
+  if(k){const gname=c=>c.gid?grp(c.gid)?.name||'':'￿';rows=[...rows].sort((a,b)=>dir*(k==='group'?gname(a).localeCompare(gname(b),'ko'):a.name.localeCompare(b.name,'ko')));}
+  return rows;
+}
 function tContacts(){
-  const q=S.q.trim(), rows=S.contacts.filter(c=>inFilter(c)&&(!q||(c.name+c.phone+c.biz).includes(q)));
-  const cnt=f=>S.contacts.filter(f).length, cur=typeof S.gfilter==='number'?grp(S.gfilter):null;
-  const curLabel=S.gfilter==='all'?'전체':S.gfilter==='none'?'미지정':cur.name;
-  const allSel=rows.length>0&&rows.every(c=>S.sel.has(c.id)), n=active(), ti=tierOf(n), opt=cnt(c=>c.optout);
-  const gi=(key,label,c,g)=>`<button class="gitem" data-gf="${key}" ${S.gfilter===key?'aria-current="true"':''}><span class="nm">${esc(label)}${g&&!g.send?' <span class="tag soft" style="padding:0 5px">발송 제외</span>':''}</span><span class="c tnum">${c}</span></button>`;
-  return `<div class="stats">
-    <div class="stat"><div class="l">주소록</div><div class="v tnum">${S.contacts.length}명</div><div class="h">그룹 ${S.groups.length}개 · 미지정 ${cnt(c=>c.gid==null)}명</div></div>
-    <div class="stat"><div class="l">수신거부</div><div class="v tnum">${opt}명</div><div class="h">보낼 때 저절로 빠집니다</div></div>
-    <div class="stat"><div class="l">매주 발송 대상</div><div class="v tnum">${n}명</div><div class="h">발송 제외 그룹은 빠집니다</div></div>
-    <div class="stat"><div class="l">이번 달 이용료</div><div class="v tnum">${won(S.tiers[ti].price)}</div><div class="h">${tierLabel(ti)} 구간</div></div>
-  </div>
-  <div class="ab">
-    <div class="gbox">
-      <div class="gtitle">그룹</div>
-      ${gi('all','전체',S.contacts.length)}${S.groups.map(g=>gi(g.id,g.name,cnt(c=>c.gid===g.id),g)).join('')}${gi('none','미지정',cnt(c=>c.gid==null))}
-      <form id="g-add" class="gadd"><input id="g-new" class="inp" style="height:28px" placeholder="새 그룹 이름" maxlength="20" aria-label="새 그룹 이름"><button class="btn sm" type="submit">추가</button></form>
-    </div>
-    <section class="card" style="margin:0">
-      <div class="card-h">
-        ${S.renaming&&cur?`<form id="g-rename" class="hstack"><input id="g-rn" class="inp" style="width:180px" value="${esc(cur.name)}" maxlength="20" aria-label="그룹 이름"><button class="btn sm primary" type="submit">저장</button><button class="btn sm" type="button" data-rn-cancel>취소</button></form>`
-          :`<h3>${esc(curLabel)}</h3><span class="sub tnum">${rows.length}명</span>`}
-        ${cur&&!S.renaming?`<button class="btn sm" data-gsend="${cur.id}">${cur.send?'발송 포함':'발송 제외'}</button><button class="btn sm" data-grename>이름 변경</button><button class="btn sm danger" data-gdel="${cur.id}">그룹 삭제</button>`:''}
-        <span class="r"><input class="inp" id="q" style="width:200px" placeholder="이름 · 번호 · 상호로 찾기" value="${esc(S.q)}"><button class="btn" id="open-upload">파일 불러오기</button><button class="btn primary" id="add-row">고객 추가</button></span>
+  const cnt=f=>S.contacts.filter(f).length, n=active(), ti=tierOf(n);
+  const all=bookRows(), pages=Math.max(1,Math.ceil(all.length/PAGE));
+  if(S.page>pages)S.page=pages;
+  const rows=all.slice((S.page-1)*PAGE,S.page*PAGE);
+  const allSel=all.length>0&&all.every(c=>S.sel.has(c.id));
+  const gq=S.gq.trim();
+  let groups=S.groups.filter(g=>!gq||g.name.includes(gq));
+  if(S.gsort==='name')groups=[...groups].sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  if(S.gsort==='count')groups=[...groups].sort((a,b)=>cnt(c=>c.gid===b.id)-cnt(c=>c.gid===a.id));
+  const sortLabel={made:'만든 순',name:'이름 순',count:'많은 순'}[S.gsort];
+  const gRow=g=>S.renaming===g.id?`
+      <form id="g-rename" class="bk-gedit"><input id="g-rn" class="inp" value="${esc(g.name)}" maxlength="20" aria-label="그룹 이름">
+        <label class="chk small"><input type="checkbox" id="g-send" ${g.send?'checked':''}> 매주 발송에 넣기</label>
+        <span class="hstack"><button class="btn sm primary" type="submit">저장</button><button class="btn sm" type="button" data-rn-cancel>취소</button></span></form>`
+    :`<div class="bk-g" ${S.gfilter===g.id?'aria-current="true"':''}>
+        <button class="bk-gn" data-gf="${g.id}"><span class="nm">${esc(g.name)} <span class="tnum">(${cnt(c=>c.gid===g.id)})</span></span>${g.send?'':'<span class="bk-off">발송 제외</span>'}</button>
+        <button class="ib" data-gedit="${g.id}" aria-label="${esc(g.name)} 그룹 고치기">${bi('pen',14)}</button>
+        <button class="ib" data-gdel="${g.id}" aria-label="${esc(g.name)} 그룹 지우기">${bi('x',15)}</button></div>`;
+  const th=(label,key)=>`<th>${key?`<button class="bk-sort ${S.csort.k===key?'on':''}" data-csort="${key}">${label} ${bi('sort',13)}</button>`:label}</th>`;
+  const pg=[];{let a=Math.max(1,S.page-2),b=Math.min(pages,a+4);a=Math.max(1,b-4);for(let i=a;i<=b;i++)pg.push(i);}
+  return `<div class="bk-sum small muted">주소록 <b class="tnum">${S.contacts.length}</b>명 · 매주 발송 대상 <b class="tnum">${n}</b>명 · 이번 달 이용료 <b class="tnum">${won(S.tiers[ti].price)}</b> (${tierLabel(ti)} 구간)</div>
+  <div class="book">
+    <aside class="bk-l">
+      <label class="bk-srch"><input id="gq" placeholder="그룹명 검색" value="${esc(S.gq)}" aria-label="그룹명 검색">${bi('search',18)}</label>
+      <div class="bk-panel">
+        <form id="g-add" class="bk-add"><input id="g-new" class="inp" placeholder="그룹명 입력 (20자)" maxlength="20" aria-label="새 그룹 이름"><button class="btn dark" type="submit">추가</button></form>
+        <div class="bk-all ${S.gfilter==='all'?'on':''}"><button class="bk-gn" data-gf="all"><span class="fd">${bi('folder',15)}</span>전체 <span class="tnum">(${S.contacts.length})</span></button>
+          <button class="ib" data-gsort title="그룹 정렬: ${sortLabel}" aria-label="그룹 정렬 바꾸기, 지금 ${sortLabel}">${bi('sort',16)}</button></div>
+        <div class="bk-list">
+          <div class="bk-g" ${S.gfilter==='none'?'aria-current="true"':''}><button class="bk-gn" data-gf="none"><span class="nm">미지정 <span class="tnum">(${cnt(c=>c.gid==null)})</span></span></button></div>
+          ${groups.map(gRow).join('')||(gq?'<p class="small muted" style="padding:8px 12px;margin:0">찾는 그룹이 없습니다.</p>':'')}
+        </div>
       </div>
-      ${S.sel.size?`<div class="bulk"><b class="tnum">${S.sel.size}명 선택</b><select id="bulk-g" class="sel" aria-label="옮길 그룹">${groupOptions(null)}</select><button class="btn sm" id="bulk-move">그룹으로 이동</button>
-        <button class="btn sm primary" id="bulk-send">이 번호로 전송</button><button class="btn sm" id="bulk-opt">수신거부</button><button class="btn sm danger" id="bulk-del">삭제</button><button class="btn sm" id="bulk-clear">선택 해제</button></div>`:''}
-      <div class="tw"><table>
-        <thead><tr><th style="width:36px"><input type="checkbox" id="sel-all" aria-label="전체 선택" ${allSel?'checked':''}></th><th>고객명</th><th>휴대폰</th><th>상호</th><th>그룹</th><th>수신</th><th class="r">관리</th></tr></thead>
+      <button class="btn bk-wide" id="dl-form">엑셀 양식 내려받기</button>
+    </aside>
+    <section class="bk-r">
+      <div class="bk-top">
+        <button class="btn primary bk-big" id="open-upload">주소록 대량등록</button>
+        <span class="r"><button class="btn bk-mid ${S.editMode?'on':''}" id="edit-mode" aria-pressed="${S.editMode}">${S.editMode?'편집 끝내기':'편집'}</button>
+        <label class="bk-srch bk-q"><input id="q" placeholder="이름 또는 휴대폰번호 검색" value="${esc(S.q)}" aria-label="이름 또는 휴대폰번호 검색">${bi('search',18)}</label></span>
+      </div>
+      <form id="quick" class="bk-quick"><b>빠른등록</b>
+        <input id="qa-phone" class="inp" placeholder="휴대폰번호 (필수)" inputmode="numeric" aria-label="휴대폰번호">
+        <input id="qa-name" class="inp" placeholder="이름 (필수)" aria-label="이름">
+        <input id="qa-title" class="inp" placeholder="직함" aria-label="직함">
+        <input id="qa-biz" class="inp" placeholder="상호" aria-label="상호">
+        <select id="qa-g" class="sel" aria-label="그룹">${groupOptions(typeof S.gfilter==='number'?S.gfilter:null).replace('>미지정<','>그룹미지정<')}</select>
+        <button class="btn dark" type="submit">추가</button></form>
+      <div class="bk-table"><table class="${S.editMode?'wide':''}"><colgroup><col style="width:48px"><col style="width:136px"><col><col style="width:80px"><col><col><col style="width:${S.editMode?96:84}px">${S.editMode?'<col style="width:124px">':''}</colgroup>
+        <thead><tr><th class="ck"><label class="cc" title="전체 선택"><input type="checkbox" id="sel-all" ${allSel?'checked':''} aria-label="전체 선택"><i>${bi('check',12)}</i></label></th>
+          ${th('휴대폰번호')}${th('이름','name')}${th('직함')}${th('상호')}${th('그룹명','group')}${th('수신거부')}${S.editMode?'<th>관리</th>':''}</tr></thead>
         <tbody>${rows.map(c=>S.editing===c.id?`
-          <tr><td></td><td><input id="e-name" class="inp" value="${esc(c.name)}" aria-label="고객명"></td><td><input id="e-phone" class="inp" value="${esc(c.phone)}" aria-label="휴대폰"></td><td><input id="e-biz" class="inp" value="${esc(c.biz)}" aria-label="상호"></td>
-          <td><select id="e-gid" class="sel" aria-label="그룹">${groupOptions(c.gid)}</select></td><td></td>
-          <td class="r"><div class="hstack" style="justify-content:flex-end"><button class="btn sm primary" data-save="${c.id}">저장</button><button class="btn sm" data-cancel>취소</button></div></td></tr>`:`
-          <tr class="hov ${sendable(c)?'':'off'}"><td><input type="checkbox" data-sel="${c.id}" aria-label="${esc(c.name)} 선택" ${S.sel.has(c.id)?'checked':''}></td>
-          <td class="nm"><b>${esc(c.name)}</b></td><td class="tnum">${esc(c.phone)}</td><td>${esc(c.biz)}</td>
-          <td>${c.gid?tag(grp(c.gid)?.name,'',true):'<span class="muted">—</span>'}</td>
-          <td><button class="btn sm" data-opt="${c.id}">${c.optout?'수신거부':'수신중'}</button></td>
-          <td class="r"><div class="hstack" style="justify-content:flex-end"><button class="btn sm" data-hc="${esc(c.phone)}">내역</button><button class="btn sm" data-edit="${c.id}">수정</button><button class="btn sm danger" data-del="${c.id}">삭제</button></div></td></tr>`).join('')||`<tr><td colspan="7" class="empty">이 그룹에 번호가 없습니다.</td></tr>`}
+          <tr class="ed"><td></td><td><input id="e-phone" class="inp" value="${esc(c.phone)}" aria-label="휴대폰"></td><td><input id="e-name" class="inp" value="${esc(c.name)}" aria-label="이름"></td>
+          <td><input id="e-title" class="inp" value="${esc(c.title||'')}" aria-label="직함"></td><td><input id="e-biz" class="inp" value="${esc(c.biz)}" aria-label="상호"></td><td><select id="e-gid" class="sel" aria-label="그룹">${groupOptions(c.gid)}</select></td><td></td>
+          <td><span class="hstack" style="justify-content:center"><button class="btn sm primary" data-save="${c.id}">저장</button><button class="btn sm" data-cancel>취소</button></span></td></tr>`:`
+          <tr class="${sendable(c)?'':'off'} ${S.sel.has(c.id)?'picked':''}">
+            <td class="ck"><label class="cc"><input type="checkbox" data-sel="${c.id}" aria-label="${esc(c.name)} 선택" ${S.sel.has(c.id)?'checked':''}><i>${bi('check',12)}</i></label></td>
+            <td class="tnum">${esc(c.phone)}</td><td class="el">${esc(c.name)}</td><td class="el">${esc(c.title||'')}</td><td class="el">${esc(c.biz)||'<span class="muted">—</span>'}</td>
+            <td class="el">${c.gid?esc(grp(c.gid)?.name):'<span class="muted">미지정</span>'}</td>
+            <td>${S.editMode?(c.optout?`<button class="bk-opt" data-opt="${c.id}" title="눌러서 거부 풀기">거부</button>`:`<button class="bk-optb" data-opt="${c.id}">수신거부로</button>`):c.optout?'<span class="bk-opt">거부</span>':''}</td>
+            ${S.editMode?`<td><span class="hstack" style="justify-content:center"><button class="btn sm" data-edit="${c.id}">수정</button><button class="btn sm" data-hc="${esc(c.phone)}">내역</button></span></td>`:''}</tr>`).join('')
+          ||`<tr><td colspan="${S.editMode?8:7}" class="empty">${S.q?'찾는 번호가 없습니다.':'이 그룹에 번호가 없습니다. 위 빠른등록이나 대량등록으로 넣어 주세요.'}</td></tr>`}
         </tbody></table></div>
-      <p class="small muted" style="margin:10px 0 0">흐린 줄은 수신거부했거나 발송 제외 그룹에 있는 번호입니다. <b>휴대폰 번호만</b> 받습니다.</p>
+      <div class="bk-foot">
+        <button class="btn bk-mid" id="bulk-del" ${S.sel.size?'':'disabled'}>삭제</button>
+        <button class="btn bk-mid" id="bulk-move-open" ${S.sel.size?'':'disabled'}>이동</button>
+        <button class="btn bk-mid" id="bulk-opt" ${S.sel.size?'':'disabled'}>수신거부</button>
+        ${S.sel.size?`<span class="small bk-selc"><b class="tnum">${S.sel.size}</b>명 선택 · <button class="lnk" id="bulk-send">이 번호로 보내기</button> · <button class="lnk" id="bulk-clear">해제</button></span>`:''}
+        <span class="r"><button class="btn bk-mid" id="xl-down">엑셀다운로드</button><button class="btn bk-mid bk-line" id="del-optout" ${cnt(c=>c.optout)?'':'disabled'}>수신거부번호 삭제</button></span>
+      </div>
+      ${pages>1?`<nav class="pager" aria-label="쪽 넘기기"><button data-page="1" ${S.page===1?'disabled':''} aria-label="처음">«</button><button data-page="${S.page-1}" ${S.page===1?'disabled':''} aria-label="이전">‹</button>
+        ${pg.map(i=>`<button data-page="${i}" class="${i===S.page?'on':''}" ${i===S.page?'aria-current="page"':''}>${i}</button>`).join('')}
+        <button data-page="${S.page+1}" ${S.page===pages?'disabled':''} aria-label="다음">›</button><button data-page="${pages}" ${S.page===pages?'disabled':''} aria-label="끝">»</button></nav>`:''}
     </section>
   </div>`;
+}
+function moveModal(){
+  modal(`<h3>${S.sel.size}명을 어느 그룹으로 옮길까요?</h3>
+  <div class="fl"><label for="bulk-g">옮길 그룹</label><select id="bulk-g" class="sel">${groupOptions(null)}</select></div>
+  <div class="hstack" style="justify-content:flex-end"><button class="btn" data-close>취소</button><button class="btn primary" id="bulk-move">이동</button></div>`);
+}
+function xlDown(rows,name){
+  const aoa=[['고객명','휴대폰','직함','상호','그룹명','수신거부'],...rows.map(c=>[c.name,c.phone,c.title||'',c.biz,c.gid?grp(c.gid)?.name||'':'',c.optout?'거부':''])];
+  const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=[{wch:10},{wch:15},{wch:8},{wch:18},{wch:14},{wch:8}];
+  XLSX.utils.book_append_sheet(wb,ws,'주소록');XLSX.writeFile(wb,name);
 }
 
 function tTemplates(){
@@ -623,7 +773,7 @@ function cardModal(){
 }
 function uploadModal(){
   modal(`<h3>주소록 불러오기</h3>
-  <p class="small muted" style="margin:0">세무사랑 · 더존 · 위하고에서 내려받은 거래처 엑셀을 <b>그대로</b> 올려도 됩니다. 이름 · 휴대폰 칸을 알아서 찾고, 틀리면 아래에서 고칠 수 있어요.</p>
+  <p class="small muted" style="margin:0">세무사랑 · 더존 · 위하고에서 내려받은 거래처 엑셀을 <b>그대로</b> 올려도 됩니다. 이름 · 휴대폰 · 직함 · 상호 칸을 알아서 찾고, 틀리면 아래에서 고칠 수 있어요.</p>
   <div class="drop" id="drop" tabindex="0"><span id="drop-t">파일을 끌어다 놓거나 눌러서 고르기 (xlsx · xls · csv)</span><input type="file" id="file" accept=".xlsx,.xls,.csv,.txt" hidden></div>
   <div class="fl"><label for="paste">또는 엑셀에서 복사해 붙여넣기</label><textarea id="paste" class="inp" placeholder="강민지&#9;010-1234-5678&#9;민지카페&#9;기장고객"></textarea></div>
   <div id="up-map"></div>
@@ -647,6 +797,7 @@ let pending=null,imp={rows:[],head:-1,map:{}};
 const FIELD={
   name:{label:'이름',must:true,keys:[/^대표자(명|성명)?$/,/^(고객|거래처)?(성명|이름|고객명)$/,/대표자/,/성명|이름|고객명|담당자/]},
   phone:{label:'휴대폰',must:true,keys:[/^(휴대폰|핸드폰|휴대전화|이동전화|휴대폰번호|핸드폰번호|hp|h\.p|mobile)$/i,/휴대|핸드폰|이동전화|^hp|모바일/i,/연락처|전화/]},
+  title:{label:'직함',keys:[/^(직함|직위|직책|호칭)$/,/직함|직위|직책|호칭/]},
   biz:{label:'상호',keys:[/^(상호|상호명|거래처명|업체명|회사명|사업장명)$/,/상호|거래처명|업체|회사|사업장명/]},
   group:{label:'그룹',keys:[/^(그룹|그룹명|구분|분류)$/,/그룹|구분|분류|담당자/]}
 };
@@ -737,7 +888,7 @@ function check(){
     if(!raw){nophone++;return;}
     if(!name||!ph){bad.push([name,raw].filter(Boolean).join(' / '));return;}
     if(seen.has(ph)){dup++;return;}seen.add(ph);
-    (S.contacts.find(c=>c.phone===ph)?upd:add).push({name,phone:ph,biz:M.biz!=null?cell(r[M.biz]):'',gname:M.group!=null?cell(r[M.group]):''});
+    (S.contacts.find(c=>c.phone===ph)?upd:add).push({name,phone:ph,title:M.title!=null?cell(r[M.title]):'',biz:M.biz!=null?cell(r[M.biz]):'',gname:M.group!=null?cell(r[M.group]):''});
   });
   const upg=document.getElementById('up-g').value;
   const newG=[...new Set([...add,...upd].map(x=>x.gname).filter(n=>n&&!S.groups.some(g=>g.name===n)))];
@@ -752,13 +903,13 @@ function apply(){
   if(!pending)return;
   if(pending.mode==='replace')S.contacts=S.contacts.filter(c=>pending.upd.some(u=>u.phone===c.phone));
   const gidFor=x=>x.gname?groupByName(x.gname):pending.defGid;
-  pending.upd.forEach(u=>{const c=S.contacts.find(c=>c.phone===u.phone);Object.assign(c,{name:u.name,biz:u.biz});if(u.gname)c.gid=gidFor(u);});
-  pending.add.forEach(a=>S.contacts.push({id:S.nextId++,name:a.name,phone:a.phone,biz:a.biz,gid:gidFor(a),optout:false}));
+  pending.upd.forEach(u=>{const c=S.contacts.find(c=>c.phone===u.phone);Object.assign(c,{name:u.name,biz:u.biz});if(u.title)c.title=u.title;if(u.gname)c.gid=gidFor(u);});
+  pending.add.forEach(a=>S.contacts.push({id:S.nextId++,name:a.name,phone:a.phone,title:a.title||'',biz:a.biz,gid:gidFor(a),optout:false}));
   toast(`주소록에 반영했습니다 · 추가 ${pending.add.length}명, 수정 ${pending.upd.length}명`);pending=null;closeModal();render();
 }
 
 /* ───────── 이벤트 ───────── */
-const filteredRows=()=>{const q=S.q.trim();return S.contacts.filter(c=>inFilter(c)&&(!q||(c.name+c.phone+c.biz).includes(q)));};
+const filteredRows=()=>bookRows();
 document.addEventListener('click',e=>{
   const t=e.target.closest('button,[data-close],[data-hmsg]');if(!t)return;const d=t.dataset;
   if(d.go)return go(d.go,d.tabgo);
@@ -771,28 +922,37 @@ document.addEventListener('click',e=>{
   if(d.tsel){S.tSel=+d.tsel;return render();}
   if(d.smode){S.send.mode=d.smode;S.send.checked=false;S.send.armed=false;return render();}
   if(d.unres){S.reserved=S.reserved.filter(r=>r.id!==+d.unres);toast('예약을 취소했습니다.');return render();}
-  if(d.gf){S.gfilter=(d.gf==='all'||d.gf==='none')?d.gf:+d.gf;S.sel.clear();S.editing=null;S.renaming=false;return render();}
+  if(d.gf){S.gfilter=(d.gf==='all'||d.gf==='none')?d.gf:+d.gf;S.sel.clear();S.editing=null;S.renaming=false;S.page=1;return render();}
+  if(d.gedit){S.renaming=+d.gedit;render();document.getElementById('g-rn')?.select();return;}
+  if('gsort' in d){S.gsort={made:'name',name:'count',count:'made'}[S.gsort];toast('그룹을 '+{made:'만든 순',name:'이름 순',count:'번호 많은 순'}[S.gsort]+'으로 보여 줍니다.');return render();}
+  if(d.csort){const k=d.csort;if(S.csort.k!==k)S.csort={k,dir:1};else if(S.csort.dir===1)S.csort.dir=-1;else S.csort={k:null,dir:1};return render();}
+  if(d.page){S.page=+d.page;return render();}
   if(d.gsend){const g=grp(+d.gsend);g.send=!g.send;toast(`'${g.name}' 그룹을 매주 발송에서 ${g.send?'포함':'제외'}했습니다.`);return render();}
   if('grename' in d){S.renaming=true;render();document.getElementById('g-rn')?.select();return;}
   if('rnCancel' in d){S.renaming=false;return render();}
   if(d.gdel){const g=grp(+d.gdel),n=S.contacts.filter(c=>c.gid===g.id).length;
     if(t.dataset.armed){S.contacts.forEach(c=>{if(c.gid===g.id)c.gid=null;});S.groups=S.groups.filter(x=>x.id!==g.id);S.gfilter='all';toast(`'${g.name}' 그룹을 지웠습니다. 번호 ${n}개는 미지정으로 남았습니다.`);return render();}
-    t.dataset.armed='1';t.textContent=n?`삭제 확인 (번호 ${n}개는 미지정으로)`:'삭제 확인';return;}
+    t.dataset.armed='1';if(t.classList.contains('ib')){t.classList.add('armed');toast(`한 번 더 누르면 '${g.name}' 그룹을 지웁니다.`+(n?` 번호 ${n}개는 미지정으로 남습니다.`:''));}else t.textContent=n?`삭제 확인 (번호 ${n}개는 미지정으로)`:'삭제 확인';return;}
   if(d.edit){S.editing=+d.edit;return render();}
   if('cancel' in d){const c=S.contacts.find(x=>x.id===S.editing);if(c&&!c.name&&!c.phone)S.contacts=S.contacts.filter(x=>x!==c);S.editing=null;return render();}
   if(d.save){const c=S.contacts.find(x=>x.id===+d.save),ph=normPhone(document.getElementById('e-phone').value),nm=document.getElementById('e-name').value.trim();
     if(!nm)return toast('고객명을 넣어 주세요.');if(!ph)return toast('휴대폰 번호 형식을 확인해 주세요. 예: 010-1234-5678');
     if(S.contacts.some(x=>x.phone===ph&&x.id!==c.id))return toast('이미 주소록에 있는 번호입니다.');
-    const gv=document.getElementById('e-gid').value;Object.assign(c,{name:nm,phone:ph,biz:document.getElementById('e-biz').value.trim(),gid:gv?+gv:null});S.editing=null;toast('저장했습니다.');return render();}
+    const gv=document.getElementById('e-gid').value;Object.assign(c,{name:nm,phone:ph,title:document.getElementById('e-title')?.value.trim()??c.title,biz:document.getElementById('e-biz').value.trim(),gid:gv?+gv:null});S.editing=null;toast('저장했습니다.');return render();}
   if(d.del){const c=S.contacts.find(x=>x.id===+d.del);if(t.dataset.armed){S.contacts=S.contacts.filter(x=>x.id!==c.id);toast(`${c.name} 님을 지웠습니다.`);return render();}
     t.dataset.armed='1';t.textContent='한 번 더 누르면 삭제';return;}
   if(d.opt){const c=S.contacts.find(x=>x.id===+d.opt);c.optout=!c.optout;return render();}
   switch(t.id){
     case 'add-row':{const c={id:S.nextId++,name:'',phone:'',biz:'',optout:false,gid:typeof S.gfilter==='number'?S.gfilter:null};S.contacts.unshift(c);S.editing=c.id;S.q='';render();document.getElementById('e-name')?.focus();break;}
     case 'open-upload':uploadModal();break;
+    case 'edit-mode':S.editMode=!S.editMode;if(!S.editMode)S.editing=null;render();break;
+    case 'bulk-move-open':moveModal();break;
+    case 'dl-form':{const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet([['고객명','휴대폰','직함','상호','그룹명'],['홍길동','010-1234-5678','대표님','길동상회','기장고객']]);ws['!cols']=[{wch:10},{wch:15},{wch:8},{wch:18},{wch:14}];XLSX.utils.book_append_sheet(wb,ws,'주소록');XLSX.writeFile(wb,'주소록_양식.xlsx');break;}
+    case 'xl-down':{const rows=S.sel.size?S.contacts.filter(c=>S.sel.has(c.id)):bookRows();if(!rows.length)return toast('내려받을 번호가 없습니다.');xlDown(rows,`주소록_${new Date().toISOString().slice(0,10)}.xlsx`);toast(`${rows.length}명을 엑셀로 내려받았습니다.`);break;}
+    case 'del-optout':{const n=S.contacts.filter(c=>c.optout).length;if(t.dataset.armed){S.contacts=S.contacts.filter(c=>!c.optout);S.sel.clear();toast(`수신거부 번호 ${n}개를 지웠습니다.`);render();}else{t.dataset.armed='1';t.textContent=`${n}개 삭제 확인`;}break;}
     case 'up-check':check();break;
     case 'up-apply':apply();break;
-    case 'bulk-move':{const v=document.getElementById('bulk-g').value,gid=v?+v:null;S.contacts.forEach(c=>{if(S.sel.has(c.id))c.gid=gid;});toast(`${S.sel.size}명을 '${gid?grp(gid).name:'미지정'}'(으)로 옮겼습니다.`);S.sel.clear();render();break;}
+    case 'bulk-move':{const v=document.getElementById('bulk-g').value,gid=v?+v:null;S.contacts.forEach(c=>{if(S.sel.has(c.id))c.gid=gid;});toast(`${S.sel.size}명을 '${gid?grp(gid).name:'미지정'}'(으)로 옮겼습니다.`);S.sel.clear();closeModal();render();break;}
     case 'bulk-send':S.send.mode='picked';S.send.picked=[...S.sel];S.send.checked=false;S.sel.clear();go('kakao',S.send.tid?'발송':'템플릿');if(!S.send.tid)toast('보낼 템플릿을 골라 주세요.');break;
     case 'bulk-opt':S.contacts.forEach(c=>{if(S.sel.has(c.id))c.optout=true;});toast(`${S.sel.size}명을 수신거부로 바꿨습니다.`);S.sel.clear();render();break;
     case 'bulk-del':if(t.dataset.armed){const n=S.sel.size;S.contacts=S.contacts.filter(c=>!S.sel.has(c.id));S.sel.clear();toast(`${n}명을 지웠습니다.`);render();}else{t.dataset.armed='1';t.textContent=`${S.sel.size}명 삭제 확인`;}break;
@@ -818,13 +978,19 @@ document.addEventListener('submit',e=>{
   if(e.target.id==='g-add'){const v=document.getElementById('g-new').value.trim();if(!v)return toast('그룹 이름을 넣어 주세요.');
     if(S.groups.some(g=>g.name===v))return toast('같은 이름의 그룹이 이미 있습니다.');
     const g={id:S.nextGid++,name:v,send:true};S.groups.push(g);S.gfilter=g.id;S.sel.clear();toast(`'${v}' 그룹을 만들었습니다.`);render();}
-  if(e.target.id==='g-rename'){const v=document.getElementById('g-rn').value.trim(),g=grp(S.gfilter);if(!v)return toast('그룹 이름을 넣어 주세요.');
-    if(S.groups.some(x=>x.name===v&&x.id!==g.id))return toast('같은 이름의 그룹이 이미 있습니다.');g.name=v;S.renaming=false;toast('그룹 이름을 바꿨습니다.');render();}
+  if(e.target.id==='g-rename'){const v=document.getElementById('g-rn').value.trim(),g=grp(S.renaming);if(!v)return toast('그룹 이름을 넣어 주세요.');
+    if(S.groups.some(x=>x.name===v&&x.id!==g.id))return toast('같은 이름의 그룹이 이미 있습니다.');g.name=v;g.send=document.getElementById('g-send').checked;S.renaming=false;toast('그룹을 고쳤습니다.');render();}
+  if(e.target.id==='quick'){const v=id=>document.getElementById(id).value.trim(),ph=normPhone(v('qa-phone')),nm=v('qa-name');
+    if(!ph)return toast('휴대폰 번호를 확인해 주세요. 예: 010-1234-5678');if(!nm)return toast('이름을 넣어 주세요.');
+    if(S.contacts.some(c=>c.phone===ph))return toast('이미 주소록에 있는 번호입니다.');
+    const g=v('qa-g');S.contacts.unshift({id:S.nextId++,name:nm,phone:ph,title:v('qa-title'),biz:v('qa-biz'),gid:g?+g:null,optout:false});
+    S.csort={k:null,dir:1};S.page=1;toast(`${nm} 님을 넣었습니다.`);render();document.getElementById('qa-phone')?.focus();}
 });
 const keepFocus=id=>{const el=document.getElementById(id);if(!el)return;const p=el.selectionStart;render();const n=document.getElementById(id);n.focus();try{n.setSelectionRange(p,p);}catch(_){}};
 document.addEventListener('input',e=>{
   const id=e.target.id;
-  if(id==='q'){S.q=e.target.value;keepFocus('q');}
+  if(id==='q'){S.q=e.target.value;S.page=1;keepFocus('q');}
+  if(id==='gq'){S.gq=e.target.value;keepFocus('gq');}
   if(id==='hq'){S.hq=e.target.value;keepFocus('hq');}
   if(e.target.dataset.svar!==undefined){S.send.vars[e.target.dataset.svar]=e.target.value;S.send.checked=false;S.send.armed=false;keepFocus(id);}
 });
