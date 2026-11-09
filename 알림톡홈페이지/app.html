@@ -431,6 +431,29 @@ td.tnum{white-space:nowrap}
 .card,.stat,.bk-l,.bk-r{border:1px solid var(--line);box-shadow:none}
 .card .card{border:0}
 .nchip{border-color:var(--line);box-shadow:none}
+
+/* 카카오톡 채널ID 등록 */
+.chreg{max-width:760px}
+.chinfo{list-style:none;margin:0 0 22px;padding:16px 20px;background:#EEF4FF;border-radius:12px;display:flex;flex-direction:column;gap:8px;font-size:13px;color:#3F4350}
+.chinfo li{position:relative;padding-left:12px}
+.chinfo li::before{content:"";position:absolute;left:0;top:8px;width:4px;height:4px;border-radius:50%;background:#3B82F6}
+.chinfo a{color:#2563EB;text-decoration:underline}
+.chfl{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.chfl>label{font-size:14px;font-weight:600;color:var(--ink)}
+.chfl>label i{color:#E5484D;font-style:normal}
+.chfl .inp,.chfl .sel{height:46px;background:var(--card);border:1px solid var(--line);border-radius:6px;font-size:15px}
+.chat-at{position:relative}
+.chat-at span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--ink);font-size:15px}
+.chat-at .inp{padding-left:32px;width:100%}
+.chcat{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.chph{display:flex;gap:10px}
+.chph .inp{flex:1;min-width:0}
+.chbtn{height:46px;padding:0 22px;border:1px solid var(--brand);color:var(--brand);background:var(--card);font-weight:700}
+.chfoot{display:flex;justify-content:space-between;margin-top:8px}
+.chcancel{height:46px;padding:0 24px;background:var(--field);border-color:var(--field);font-weight:700}
+.chreg-ok{height:46px;padding:0 28px}
+.chreg-ok:disabled{background:#E4E4E9;border-color:#E4E4E9;color:#fff;opacity:1}
+@media (max-width:640px){.chcat{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -941,25 +964,27 @@ function vChannel(){
       </div>
       <dl class="chdl">
         <div><dt>채널 ID</dt><dd>${esc(o.channel)}</dd></div>
-        <div><dt>알림톡 그룹</dt><dd>${st==='연결됨'?'세무사 알림톡 그룹에 들어가 있어요 — 운영사가 검수받은 공용 템플릿을 그대로 씁니다':'운영사가 그룹에 넣는 중이에요. 끝나면 문자로 알려 드립니다 (보통 1영업일)'}</dd></div>
+        <div><dt>알림톡 그룹</dt><dd>${st==='연결됨'?'세무사 알림톡 그룹에 들어가 있어요 — 운영사가 검수받은 공용 템플릿을 그대로 씁니다':'카카오 등록 대기 중이에요. 풀리면 세무사 알림톡 그룹에 저절로 들어갑니다'}</dd></div>
         <div><dt>연결한 날</dt><dd class="tnum">${esc(S.chanDate||'2025-03-04')}</dd></div>
       </dl>
       <div class="hstack" style="margin-top:14px"><button class="btn" id="ch-change">다른 채널로 바꾸기</button></div>
     </section>`:'';
-  const form=linked?'':`<section class="card"><div class="card-h"><h3>${chanOk()?'다른 채널로 바꾸기':'카카오톡 채널 연결하기'}</h3>${chanOk()?'<span class="r"><button class="btn sm" id="ch-cancel">그만두기</button></span>':''}</div>
-      <ol class="chsteps">
-        <li class="${f.sent?'done':'on'}"><div class="n">1</div><div class="b">
-          <div class="fgrid"><div class="fl"><label for="ch-id">카카오톡 채널 ID</label><input id="ch-id" class="inp" placeholder="@정훈세무회계" value="${esc(f.id||'')}" ${f.sent?'disabled':''}>
-            <span class="small muted">카카오톡 채널 관리자센터 › 채널 › 프로필 설정의 <b>검색용 아이디</b>예요. @ 부터 적어 주세요.</span></div>
-          <div class="fl"><label for="ch-phone">채널 관리자 휴대폰</label><input id="ch-phone" class="inp" placeholder="010-1234-5678" inputmode="numeric" value="${esc(f.phone||'')}" ${f.sent?'disabled':''}>
-            <span class="small muted">채널 관리자로 등록된 카카오 계정의 휴대폰 번호</span></div></div>
-          <div class="hstack" style="margin-top:10px">${f.sent?`<button class="btn sm" id="ch-reset">번호 다시 넣기</button>`:`<button class="btn primary" id="ch-send-code">인증번호 받기</button>`}</div></div></li>
-        <li class="${f.sent?'on':''}"><div class="n">2</div><div class="b">
-          <div class="fl" style="max-width:260px"><label for="ch-code">카카오톡으로 받은 인증번호</label><input id="ch-code" class="inp tnum" maxlength="6" inputmode="numeric" placeholder="6자리" ${f.sent?'':'disabled'}></div>
-          <div class="hstack" style="margin-top:10px"><button class="btn primary" id="ch-connect" ${f.sent?'':'disabled'}>연결 요청</button></div></div></li>
-        <li><div class="n">3</div><div class="b"><b>운영사가 알림톡 그룹에 넣어 드려요</b><div class="small muted">그룹에 들어가면 공용 템플릿으로 매주 자동 발송이 시작됩니다. 보통 1영업일 걸려요.</div></div></li>
-      </ol>
-      <div class="note" style="margin-top:4px"><b>먼저 확인해 주세요</b><br>· 알림톡은 <b>비즈니스 인증을 받은 채널</b>만 보낼 수 있어요.<br>· 채널이 <b>공개</b> · <b>검색 허용</b>으로 되어 있어야 찾을 수 있어요.<br>· 채널이 없으시면 운영사에 말씀해 주세요. 만드는 것부터 도와드립니다.</div>
+  const CAT=['전문서비스','세무/회계/금융서비스','세무/회계/금융서비스'];
+  const form=linked?'':`<section class="card chreg"><div class="card-h"><h3>카카오톡 채널ID 등록</h3>${chanOk()?'<span class="r"><button class="btn sm" id="ch-cancel">그만두기</button></span>':''}</div>
+      <ul class="chinfo">
+        <li>발신프로필로 사용할 카카오톡 채널 아이디를 정확히 입력해 주세요.</li>
+        <li>카카오톡 채널 ID가 없으신 경우 <a href="https://center-pf.kakao.com/" target="_blank" rel="noopener">[카카오톡 채널 관리자센터]</a>에서 채널을 만든 뒤 <b>프로필 설정 › 검색용 아이디</b>를 확인해 주세요.</li>
+        <li>발신프로필과 사업자등록번호가 일치하지 않을 경우 발신프로필이 차단될 수 있습니다.</li>
+      </ul>
+      <div class="chfl"><label for="ch-id">카카오톡 채널 ID (검색용 아이디)<i>*</i></label>
+        <div class="chat-at"><span>@</span><input id="ch-id" class="inp" value="${esc((f.id||'').replace(/^@/,''))}" ${f.sent?'disabled':''} aria-label="카카오톡 채널 ID"></div></div>
+      <div class="chfl"><label>카테고리<i>*</i></label>
+        <div class="chcat">${['대분류','중분류','소분류'].map((l,i)=>`<select class="sel" id="ch-cat${i}" aria-label="${l}" ${f.sent?'disabled':''}><option>${esc(CAT[i])}</option></select>`).join('')}</div></div>
+      <div class="chfl"><label for="ch-phone">채널 관리자 휴대폰 번호<i>*</i></label>
+        <div class="chph"><input id="ch-phone" class="inp" placeholder="숫자만 최대 11자리" inputmode="numeric" maxlength="11" value="${esc((f.phone||'').replace(/\D/g,''))}" ${f.sent?'disabled':''}>
+          <button class="btn chbtn" id="${f.sent?'ch-reset':'ch-send-code'}">${f.sent?'다시 받기':'인증번호'}</button></div></div>
+      ${f.sent?`<div class="chfl"><label for="ch-code">카카오톡으로 받은 인증번호<i>*</i></label><input id="ch-code" class="inp tnum" maxlength="8" inputmode="numeric" placeholder="채널 관리자 카카오톡으로 온 숫자"></div>`:''}
+      <div class="chfoot"><button class="btn chcancel" id="${chanOk()?'ch-cancel':'ch-clear'}">취소</button><button class="btn primary chreg-ok" id="ch-connect" ${f.sent?'':'disabled'}>등록</button></div>
     </section>`;
   return `<p class="lead">고객이 받는 알림톡은 <b>세무사님의 카카오톡 채널</b> 이름으로 나갑니다. 채널을 한 번 연결해 두면 이후로는 손댈 일이 없어요.</p>${head}${form}`;
 }
@@ -1178,14 +1203,15 @@ document.addEventListener('click',e=>{
     case 'ch-change':S.chanFlow={open:true};render();break;
     case 'ch-cancel':S.chanFlow={};render();break;
     case 'ch-reset':S.chanFlow={...S.chanFlow,sent:false};render();break;
-    case 'ch-send-code':{const id=document.getElementById('ch-id').value.trim(),ph=normPhone(document.getElementById('ch-phone').value);
-      if(!/^@\S{1,40}$/.test(id))return toast('채널 ID를 @ 부터 적어 주세요. 예: @정훈세무회계');
-      if(!ph)return toast('관리자 휴대폰 번호를 확인해 주세요.');
-      S.chanFlow={...S.chanFlow,id,phone:ph,sent:true};render();document.getElementById('ch-code')?.focus();
-      toast('채널 관리자 카카오톡으로 인증번호를 보냈습니다. (데모: 아무 6자리)');break;}
-    case 'ch-connect':{const c=document.getElementById('ch-code').value.replace(/\D/g,'');if(c.length!==6)return toast('인증번호 6자리를 넣어 주세요.');
-      S.office.channel=S.chanFlow.id;S.chanStatus='확인 중';S.chanDate=new Date().toISOString().slice(0,10);S.chanFlow={};
-      toast('연결을 요청했습니다. 운영사가 알림톡 그룹에 넣으면 문자로 알려 드려요.');render();break;}
+    case 'ch-clear':S.chanFlow={};render();break;
+    case 'ch-send-code':{const raw=document.getElementById('ch-id').value.trim().replace(/^@/,''),ph=normPhone(document.getElementById('ch-phone').value);
+      if(!raw)return toast('카카오톡 채널 ID(검색용 아이디)를 넣어 주세요.');
+      if(!ph)return toast('채널 관리자 휴대폰 번호를 확인해 주세요. 숫자만 11자리');
+      S.chanFlow={...S.chanFlow,id:'@'+raw,phone:ph,sent:true};render();document.getElementById('ch-code')?.focus();
+      toast('채널 관리자 카카오톡으로 인증번호를 보냈습니다. (데모: 아무 숫자)');break;}
+    case 'ch-connect':{const c=document.getElementById('ch-code')?.value.replace(/\D/g,'')||'';if(c.length<4)return toast('카카오톡으로 받은 인증번호를 넣어 주세요.');
+      S.office.channel=S.chanFlow.id;S.chanStatus='연결됨';S.chanDate=new Date().toISOString().slice(0,10);S.chanFlow={};
+      toast('등록됐어요. 세무사 알림톡 그룹에도 저절로 들어갔습니다.');render();break;}
     case 'l-save':{const n=S.notices.find(x=>x.id===S.lSel),l=draftList();if(!recipientsOf(n,l).length)return toast('받을 사람을 한 명 이상 골라 주세요. 안 보내시려면 「이번엔 보내지 않기」를 누르세요.');
       const d=new Date();n.list={...l,at:`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`};
       toast(`${recipientsOf(n).length}명 명단을 저장했습니다. 마감 전까지 고칠 수 있어요.`);render();break;}
