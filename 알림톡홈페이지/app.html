@@ -409,6 +409,23 @@ button.bk-opt{border:0;cursor:pointer;font:inherit;font-size:12px;font-weight:70
 .nchips{display:flex;gap:8px;flex-wrap:wrap}
 .nchip{display:flex;flex-direction:column;align-items:flex-start;gap:2px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);padding:8px 12px;cursor:pointer;font:inherit;color:var(--ink);text-align:left}
 .nchip.on{border-color:var(--brand);background:var(--brand-soft)}.nchip.on b{color:var(--brand)}
+
+/* ── 화면 짜임: 회색 바탕 + 흰 둥근 상자. 맨 위는 경로 없이 큰 화면 제목 (관제탑과 같은 모양) ── */
+:root{--page:#F3F4F6}
+body{background:var(--page)}
+.top{position:static;height:auto;background:transparent;max-width:1280px;margin:0 auto;width:100%;box-sizing:border-box;padding-top:30px;padding-bottom:18px}
+.top .grp,.top .slash{display:none}
+.top h1{font-size:24px;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
+main{padding-top:0}
+.card{background:var(--card);border:0;border-radius:20px;padding:24px;margin-bottom:16px;box-shadow:0 1px 2px rgb(20 20 25/.04)}
+.card .card{box-shadow:none;padding:0;border-radius:0}
+.stat{border:0;border-radius:16px;padding:16px 18px;box-shadow:0 1px 2px rgb(20 20 25/.04)}
+.card-h h3{font-size:17px}
+.card-h h3::before{display:none}
+.bk-l,.bk-r{background:var(--card);border-radius:20px;padding:20px;box-shadow:0 1px 2px rgb(20 20 25/.04)}
+.nchip{border-color:transparent;box-shadow:0 1px 2px rgb(20 20 25/.06)}
+.nchip.on{border-color:var(--brand)}
+td.tnum{white-space:nowrap}
 </style>
 </head>
 <body>

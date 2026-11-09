@@ -387,6 +387,23 @@ tr.sub > td{background:#F7F7F9}
 .nfoot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:2px solid var(--ink);margin-top:14px;padding-top:14px}
 .nbig{height:44px;padding:0 22px;font-size:15px}
 @media (max-width:760px){.nmeta{grid-template-columns:1fr 1fr}}
+
+/* ── 화면 짜임: 회색 바탕 + 흰 둥근 상자. 맨 위는 경로 없이 큰 화면 제목 ── */
+:root{--page:#F3F4F6}
+body{background:var(--page)}
+.top{position:static;height:auto;background:transparent;max-width:1280px;margin:0 auto;width:100%;box-sizing:border-box;padding-top:30px;padding-bottom:18px}
+.top .grp,.top .slash{display:none}
+.top h1{font-size:24px;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
+main{padding-top:0}
+.card{background:var(--card);border:0;border-radius:20px;padding:24px;margin-bottom:16px;box-shadow:0 1px 2px rgb(20 20 25/.04)}
+.card .card{box-shadow:none;padding:0;border-radius:0}
+.stat{border:0;border-radius:16px;padding:16px 18px;box-shadow:0 1px 2px rgb(20 20 25/.04)}
+.card-h h3{font-size:17px}
+.card-h h3::before{display:none}
+.nchip{border-color:transparent;box-shadow:0 1px 2px rgb(20 20 25/.06)}
+.nchip.on{border-color:var(--brand)}
+.gbox{background:var(--card);border:0;border-radius:20px;padding:16px;box-shadow:0 1px 2px rgb(20 20 25/.04)}
+td.tnum,.ab table td:nth-child(4),.ab table td:nth-child(5){white-space:nowrap}
 </style>
 </head>
 <body>
@@ -535,9 +552,10 @@ const NAV=[
     {k:'t-alim',l:'알림톡 템플릿',ic:'chat',n:()=>S.alim.filter(t=>t.status==='검수중').length},
     {k:'t-brand',l:'브랜드 템플릿',ic:'star'}]},
   {title:'주소록',items:[
-    {k:'lists',l:'알림톡 발송명단',ic:'send',n:()=>S.notices.filter(n=>n.status==='모으는 중').length},
     {k:'taxbook',l:'가입자 주소록',ic:'building',n:()=>S.tax.length},
-    {k:'book',l:'세무사별 주소록',ic:'user',n:()=>S.contacts.length},
+    {k:'book',l:'세무사별 주소록',ic:'user',n:()=>S.contacts.length}]},
+  {title:'카카오톡 발송',items:[
+    {k:'lists',l:'알림톡 발송명단',ic:'calendar',n:()=>S.notices.filter(n=>n.status==='모으는 중').length},
     {k:'send',l:'카카오톡 전송',ic:'send',n:()=>S.pick.size}]},
   {title:'전송결과',items:[
     {k:'sent',l:'전송내역',ic:'check'},
@@ -887,7 +905,7 @@ const minsLeft=at=>(new Date(at.replace(' ','T'))-new Date())/60000;
 function vReserved(){
   const f=S.rf,q=f.q.trim();
   const rows=S.batches.filter(b=>b.reserved&&!b.cancelled&&b.at.slice(0,10)>=f.from&&b.at.slice(0,10)<=f.to&&(!q||(b.title+(b.body||'')).includes(q))).flatMap(splitRows).sort((x,y)=>x.at.localeCompare(y.at)||x.channels[0].localeCompare(y.channels[0]));
-  return `<div class="hstack" style="margin-bottom:14px"><h2 style="font-size:20px">예약내역</h2><button class="kebab" id="r-refresh" aria-label="새로 불러오기" title="새로 불러오기" style="color:var(--ink)">${REFRESH}</button></div>
+  return `<section class="card"><div class="hstack" style="margin-bottom:14px;justify-content:flex-end"><button class="kebab" id="r-refresh" aria-label="새로 불러오기" title="새로 불러오기" style="color:var(--ink)">${REFRESH}</button></div>
   <ul class="rnotes"><li>「예약삭제」는 전송 5분 전까지 할 수 있습니다.</li><li>삭제된 메시지는 복구할 수 없습니다.</li><li>최근 3개월 동안 예약된 메시지를 확인할 수 있습니다.</li></ul>
   <div class="filters" style="justify-content:flex-end;margin-top:28px">
     <label class="datebox">${CAL}<input type="date" id="rf-from" value="${esc(f.from)}" aria-label="시작일"></label><span class="muted">~</span>
@@ -901,7 +919,7 @@ function vReserved(){
       <td>${esc(b.mtype)}</td><td class="tnum">${b.logs.length}</td>
       <td>${lock?'<span class="small muted">삭제 불가</span>':`<button class="btn sm danger" data-unres="${b.id}">삭제</button>`}</td></tr>
       ${open?`<tr class="sub"><td colspan="6" style="text-align:left"><div class="tw" style="background:var(--card)"><table><thead><tr><th>보낼 곳</th><th>받는 분</th><th>휴대폰</th></tr></thead>
-        <tbody>${b.logs.map(l=>`<tr class="hov"><td class="small">${esc(l.office)}</td><td><b>${esc(l.name)}</b></td><td class="tnum">${esc(l.phone)}</td></tr>`).join('')}</tbody></table></div></td></tr>`:''}`}).join('')||'<tr><td colspan="6" class="empty" style="color:var(--ink)">데이터가 없습니다.</td></tr>'}</tbody></table></div>`;
+        <tbody>${b.logs.map(l=>`<tr class="hov"><td class="small">${esc(l.office)}</td><td><b>${esc(l.name)}</b></td><td class="tnum">${esc(l.phone)}</td></tr>`).join('')}</tbody></table></div></td></tr>`:''}`}).join('')||'<tr><td colspan="6" class="empty" style="color:var(--ink)">데이터가 없습니다.</td></tr>'}</tbody></table></div></section>`;
 }
 
 /* 예시 전송 기록 */
