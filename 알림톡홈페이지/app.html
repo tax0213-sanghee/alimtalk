@@ -500,7 +500,7 @@ const icon=n=>`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" strok
 
 /* ───────── 예시 자료 (실서버에서는 DB) ───────── */
 const S={
-  view:'home', tab:'주소록', editing:null, q:'',
+  view:'lists', tab:'주소록', editing:null, q:'',
   tiers:[{max:100,price:30000},{max:300,price:50000},{max:500,price:70000},{max:null,price:90000}],
   billDay:5,
   office:{name:'정훈세무회계',owner:'김정훈',phone:'063-271-0000',channel:'@정훈세무회계',card:{brand:'신한',last4:'4417'},bill:'정상'},
@@ -576,11 +576,10 @@ const tag=(t,tone='',soft)=>`<span class="tag ${tone}${soft?' soft':''}">${esc(t
 
 /* ───────── 메뉴 (택스팟 menu.ts 의 짜임) ───────── */
 const NAV=[
-  {items:[{k:'home',l:'홈',ic:'home'}]},
+  {items:[{k:'lists',l:'발송명단확정',ic:'send',alert:()=>needList()}]},
   {items:[
     {k:'channel',l:'카톡채널ID',ic:'chat',alert:()=>chanOk()?0:1},
     {k:'kakao',tab:'템플릿',l:'템플릿확인',ic:'doc'},
-    {k:'lists',l:'발송명단',ic:'send',alert:()=>needList()},
     {k:'kakao',tab:'주소록',l:'주소록',ic:'user',n:()=>S.contacts.length},
     {k:'kakao',tab:'결과',l:'전송결과',ic:'check',n:()=>S.reserved.length}
   ]},
@@ -596,7 +595,7 @@ function renderNav(){
   document.getElementById('mnav').innerHTML=NAV.flatMap(g=>g.items).map(it=>`<button data-go="${it.k}" ${it.tab?`data-tabgo="${it.tab}"`:''} ${isOn(it)?'aria-current="page"':''}>${it.l}</button>`).join('');
   const g=S.view==='kakao'&&S.tab==='발송'?'템플릿확인':S.view==='billing'?'이용 · 결제':'';
   document.getElementById('crumb-g').textContent=g; document.getElementById('crumb-s').hidden=!g;
-  document.getElementById('crumb-t').textContent=S.view==='home'?'홈':S.view==='channel'?'카톡채널ID':S.view==='lists'?'발송명단':S.view==='kakao'?TAB_LABEL[S.tab]:'이용료 · 카드';
+  document.getElementById('crumb-t').textContent=S.view==='home'?'홈':S.view==='channel'?'카톡채널ID':S.view==='lists'?'발송명단확정':S.view==='kakao'?TAB_LABEL[S.tab]:'이용료 · 카드';
 }
 
 /* ───────── 홈 ───────── */
