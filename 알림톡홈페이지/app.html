@@ -514,6 +514,16 @@ td.tnum{white-space:nowrap}
 .hlog li:last-child{border-bottom:0}
 .titem.hcols>b,.titem.hcols>.muted{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .thead.hcols,.titem.hcols{grid-template-columns:118px minmax(0,1.3fr) minmax(0,1.5fr) 58px 40px 40px 66px;gap:10px}
+
+/* 택스팟 Tabs variant="group" — 칸이 붙어 한 덩이인 탭 */
+.gtabs{display:inline-flex;flex-shrink:0;overflow:hidden;border-radius:6px;border:1px solid var(--line)}
+.gtabs button{display:flex;height:32px;align-items:center;gap:6px;white-space:nowrap;border:0;border-left:1px solid var(--line);padding:0 12px;font:inherit;font-size:14px;font-weight:700;background:var(--card);color:var(--muted-strong);cursor:pointer;transition:background .12s,color .12s}
+.gtabs button:first-child{border-left:0}
+.gtabs button:hover{background:var(--field);color:var(--ink)}
+.gtabs button.on{background:var(--brand-soft);color:var(--brand)}
+.gtabs button span{border-radius:999px;padding:1px 6px;font-size:12px;font-weight:800;background:var(--field);color:var(--muted-strong)}
+.gtabs button.on span{background:var(--card);color:var(--brand)}
+.thead.hcols,.titem.hcols{grid-template-columns:118px minmax(0,1fr) 64px 44px 44px 70px}
 </style>
 </head>
 <body>
@@ -970,7 +980,7 @@ function tResult(){
   return `${S.reserved.length?`<section class="card"><div class="card-h"><h3>예약내역</h3><span class="sub tnum">${S.reserved.length}건</span></div><div class="tw"><table>
     <thead><tr><th>예약 시각</th><th>템플릿</th><th class="r">받는 분</th><th class="r">관리</th></tr></thead>
     <tbody>${S.reserved.map(r=>`<tr class="hov"><td class="tnum">${esc(r.at.replace('T',' '))}</td><td><b>${esc(r.title)}</b></td><td class="r tnum">${r.n}</td><td class="r"><button class="btn sm danger" data-unres="${r.id}">예약 취소</button></td></tr>`).join('')}</tbody></table></div></section>`:''}
-  <div class="hstack" style="margin-bottom:14px"><div class="seg" role="group" aria-label="보기 방식"><button data-hview="date" aria-pressed="${S.hView==='date'}">발송일별</button><button data-hview="contact" aria-pressed="${S.hView==='contact'}">거래처별</button></div></div>
+  <div class="hstack" style="margin-bottom:14px"><div class="gtabs" role="tablist" aria-label="보기 방식"><button role="tab" data-hview="date" aria-selected="${S.hView==='date'}" class="${S.hView==='date'?'on':''}">발송일별<span class="tnum">${S.history.length}</span></button><button role="tab" data-hview="contact" aria-selected="${S.hView==='contact'}" class="${S.hView==='contact'?'on':''}">거래처별<span class="tnum">${new Set(S.history.flatMap(h=>h.logs.map(l=>l.phone))).size}</span></button></div></div>
   ${S.hView==='date'?histByDate():histByContact()}`;
 }
 /* 발송 한 회의 성공 · 실패 · 진행 — 문자로 대신 간 것도 성공으로 센다 */
@@ -984,10 +994,9 @@ function histByDate(){
   const t=h&&tOf(h),fail=h?h.logs.filter(l=>l.result==='실패').length:0;
   return `<div class="tlay">
     <section class="tlist">
-      <div class="thead hcols"><span>발송일자</span><span>템플릿명</span><span>내용</span><span class="r">전송건수</span><span class="r">성공</span><span class="r">실패</span><span class="r">진행상황</span></div>
+      <div class="thead hcols"><span>발송일자</span><span>템플릿명</span><span class="r">전송건수</span><span class="r">성공</span><span class="r">실패</span><span class="r">진행상황</span></div>
       <ul role="listbox" aria-label="보낸 알림톡 목록">${hs.map(x=>{const tx=tOf(x);return `<li><button class="titem hcols ${S.hSel===x.id?'on':''}" data-hsel="${x.id}" role="option" aria-selected="${S.hSel===x.id}">
         <span class="small tnum">${dt(x.date)}</span><b>${esc(tx?.name||x.title)}</b>
-        <span class="small muted">${x.no?`${x.no}회 · `:'직접 전송 · '}${esc(x.title)}</span>
         <span class="small tnum r">${x.sent}</span><span class="small tnum r">${hst(x).ok}</span><span class="small tnum r" ${hst(x).fail?'style="color:var(--bad-ink);font-weight:700"':''}>${hst(x).fail}</span><span class="r">${hst(x).doing?tag('진행 중','warn'):tag('완료','good')}</span></button></li>`;}).join('')||'<li class="empty">아직 보낸 알림톡이 없어요.</li>'}</ul>
     </section>
     ${h?`<section class="card tview"><div class="card-h"><h3>${esc(t?.name||h.title)}</h3>${tag('발송 완료','good')}</div>
