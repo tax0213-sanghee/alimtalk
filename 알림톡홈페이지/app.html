@@ -609,6 +609,7 @@ td.tnum{white-space:nowrap}
 .ctab{table-layout:fixed}
 .ctab th,.ctab td{text-align:center!important;padding-left:8px;padding-right:8px}
 .ctab td{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctab td{font-size:14px!important;height:46px}
 </style>
 </head>
 <body>
@@ -721,7 +722,7 @@ const tag=(t,tone='',soft)=>`<span class="tag ${tone}${soft?' soft':''}">${esc(t
 /* ───────── 메뉴 (택스팟 menu.ts 의 짜임) ───────── */
 const NAV=[
   {items:[{k:'lists',l:'발송명단확정',ic:'send',alert:()=>needList()}]},
-  {items:[
+  {title:'알림톡 관리',items:[
     {k:'channel',l:'카톡채널ID',ic:'chat',alert:()=>chanOk()?0:1},
     {k:'kakao',tab:'주소록',l:'주소록',ic:'user',n:()=>S.contacts.length},
     {k:'kakao',tab:'결과',l:'발송결과',ic:'check',n:()=>S.reserved.length}
@@ -915,7 +916,7 @@ function tContacts(){
         <button class="ib" data-gdel="${g.id}" aria-label="${esc(g.name)} 그룹 지우기">${bi('x',15)}</button></div>`;
   const th=(label,key)=>`<th>${key?`<button class="bk-sort ${S.csort.k===key?'on':''}" data-csort="${key}">${label} ${bi('sort',13)}</button>`:label}</th>`;
   const pg=[];{let a=Math.max(1,S.page-2),b=Math.min(pages,a+4);a=Math.max(1,b-4);for(let i=a;i<=b;i++)pg.push(i);}
-  return `<div class="bk-sum small muted">주소록 <b class="tnum">${S.contacts.length}</b>명 · 매주 발송 대상 <b class="tnum">${n}</b>명 · 이번 달 이용료 <b class="tnum">${won(S.tiers[ti].price)}</b> (${tierLabel(ti)} 구간)</div>
+  return `
   <div class="book">
     <aside class="bk-l">
       <label class="bk-srch"><input id="gq" placeholder="그룹명 검색" value="${esc(S.gq)}" aria-label="그룹명 검색">${bi('search',18)}</label>
@@ -1130,7 +1131,7 @@ function histByContact(){
   const cur=all.find(x=>x.phone===S.hContact)||list[0], sel=cur&&(cur.items.find(i=>i.h.id===S.hMsg)||cur.items[0]);
   return `<div class="hgrid">
     <div class="gbox" style="min-height:0">
-      <input class="inp" id="hq" placeholder="거래처 · 상호 · 번호로 찾기" value="${esc(S.hq)}" aria-label="거래처 찾기">
+      <label class="bk-srch"><input id="hq" placeholder="거래처 · 상호 · 번호로 찾기" value="${esc(S.hq)}" aria-label="거래처 찾기">${bi('search',18)}</label>
       <div class="clist">${list.map(x=>{const last=x.items[0],fb=x.items.filter(i=>i.l.result==='실패').length;
         return `<button class="citem" data-hc="${esc(x.phone)}" aria-current="${!!cur&&x.phone===cur.phone}"><span style="min-width:0"><b>${esc(x.name)}</b> <span class="small muted">${esc(x.biz)}</span>
           ${x.gone?'<span class="tag soft" style="padding:0 5px">주소록에서 삭제됨</span>':''}<span class="small muted tnum" style="display:block">${last?'마지막 '+last.h.date:'받은 메시지 없음'}${fb?` · 실패 ${fb}`:''}</span></span>
