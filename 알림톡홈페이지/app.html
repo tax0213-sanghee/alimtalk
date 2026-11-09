@@ -524,6 +524,10 @@ td.tnum{white-space:nowrap}
 .gtabs button span{border-radius:999px;padding:1px 6px;font-size:12px;font-weight:800;background:var(--field);color:var(--muted-strong)}
 .gtabs button.on span{background:var(--card);color:var(--brand)}
 .thead.hcols,.titem.hcols{grid-template-columns:118px minmax(0,1fr) 64px 44px 44px 70px}
+
+/* 카톡채널ID등록 — 상자 없이 */
+.chpage .card{border:0;border-radius:0;padding:0;box-shadow:none;background:none}
+.chpage .card+.card{margin-top:28px}
 </style>
 </head>
 <body>
@@ -653,7 +657,7 @@ function renderNav(){
   document.getElementById('mnav').innerHTML=NAV.flatMap(g=>g.items).map(it=>`<button data-go="${it.k}" ${it.tab?`data-tabgo="${it.tab}"`:''} ${isOn(it)?'aria-current="page"':''}>${it.l}</button>`).join('');
   const g=S.view==='kakao'&&S.tab==='발송'?'템플릿확인':S.view==='billing'?'이용 · 결제':'';
   document.getElementById('crumb-g').textContent=g; document.getElementById('crumb-s').hidden=!g;
-  document.getElementById('crumb-t').textContent=S.view==='home'?'홈':S.view==='channel'?'카톡채널ID':S.view==='lists'?'발송명단확정':S.view==='kakao'?TAB_LABEL[S.tab]:'이용료 · 카드';
+  document.getElementById('crumb-t').textContent=S.view==='home'?'홈':S.view==='channel'?'카톡채널ID등록':S.view==='lists'?'발송명단확정':S.view==='kakao'?TAB_LABEL[S.tab]:'이용료 · 카드';
 }
 
 /* ───────── 홈 ───────── */
@@ -1067,7 +1071,7 @@ function vChannel(){
       <div class="hstack" style="margin-top:14px"><button class="btn" id="ch-change">다른 채널로 바꾸기</button></div>
     </section>`:'';
   const CAT=['전문서비스','세무/회계/금융서비스','세무/회계/금융서비스'];
-  const form=linked?'':`<section class="card chreg"><div class="card-h"><h3>카카오톡 채널ID 등록</h3>${chanOk()?'<span class="r"><button class="btn sm" id="ch-cancel">그만두기</button></span>':''}</div>
+  const form=linked?'':`<section class="card chreg">${chanOk()?'<div class="card-h"><span class="r"><button class="btn sm" id="ch-cancel">그만두기</button></span></div>':''}
       <ul class="chinfo">
         <li>발신프로필로 사용할 카카오톡 채널 아이디를 정확히 입력해 주세요.</li>
         <li>카카오톡 채널 ID가 없으신 경우 <a href="https://center-pf.kakao.com/" target="_blank" rel="noopener">[카카오톡 채널 관리자센터]</a>에서 채널을 만든 뒤 <b>프로필 설정 › 검색용 아이디</b>를 확인해 주세요.</li>
@@ -1083,7 +1087,7 @@ function vChannel(){
       ${f.sent?`<div class="chfl"><label for="ch-code">카카오톡으로 받은 인증번호<i>*</i></label><input id="ch-code" class="inp tnum" maxlength="8" inputmode="numeric" placeholder="채널 관리자 카카오톡으로 온 숫자"></div>`:''}
       <div class="chfoot"><button class="btn chcancel" id="${chanOk()?'ch-cancel':'ch-clear'}">취소</button><button class="btn primary chreg-ok" id="ch-connect" ${f.sent?'':'disabled'}>등록</button></div>
     </section>`;
-  return `<p class="lead">고객이 받는 알림톡은 <b>세무사님의 카카오톡 채널</b> 이름으로 나갑니다. 채널을 한 번 연결해 두면 이후로는 손댈 일이 없어요.</p>${head}${form}`;
+  return `<div class="chpage"><p class="lead">고객이 받는 알림톡은 <b>세무사님의 카카오톡 채널</b> 이름으로 나갑니다. 채널을 한 번 연결해 두면 이후로는 손댈 일이 없어요.</p>${head}${form}</div>`;
 }
 
 function vBilling(){
