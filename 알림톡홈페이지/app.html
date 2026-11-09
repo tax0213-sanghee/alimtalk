@@ -566,6 +566,24 @@ td.tnum{white-space:nowrap}
 .hm-body{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start}
 .hm-body .hlog{margin:0;max-height:520px}
 @media (max-width:760px){.hm-body{grid-template-columns:1fr}.wsrch{width:100%}}
+
+/* 발송결과 — 왼쪽 표 · 오른쪽 발송내역 */
+.wlay{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:16px;align-items:start}
+.wleft{min-width:0}
+.wleft .wtable{min-width:600px;font-size:13px}
+.wtable tr.won td{background:var(--brand-soft)}
+.wright{position:sticky;top:12px}
+.wright .phone{margin:0 auto}
+.hbtns button{border:1px solid transparent;background:#F7F7F9;border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;align-items:flex-start;font:inherit;font-size:12px;color:var(--muted-strong);cursor:pointer;text-align:left}
+.hbtns button:hover{border-color:var(--brand);background:var(--brand-soft)}
+.hbtns button b{font-size:17px;color:var(--ink)}
+.hbtns button.bad b{color:var(--bad-ink)}
+.wmini{min-width:0!important;font-size:13px}
+.wmini td,.wmini th{height:40px}
+.modal.hmodal{max-width:680px}
+@media (max-width:1000px){.wlay{grid-template-columns:1fr}.wright{position:static}}
+.modal .gtabs{align-self:flex-start}
+.hbtns button span,.hsum span{white-space:nowrap;font-size:11.5px}
 </style>
 </head>
 <body>
@@ -1036,6 +1054,8 @@ function hRows(){const f=S.hf;const q=f.q.trim();
 function histByDate(){
   const f=S.hf,all=hRows(),pages=Math.max(1,Math.ceil(all.length/H_PAGE));if(f.page>pages)f.page=pages;
   const rows=all.slice((f.page-1)*H_PAGE,f.page*H_PAGE);
+  if(!all.some(h=>h.id===S.hSel)&&all.length)S.hSel=all[0].id;
+  const sel=all.find(h=>h.id===S.hSel);
   const pg=[];{let a=Math.max(1,f.page-4),b=Math.min(pages,a+9);a=Math.max(1,b-9);for(let i=a;i<=b;i++)pg.push(i);}
   const CAL='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/><path d="m9 15 2 2 4-4"/></svg>';
   return `<div class="wfilters">
@@ -1044,28 +1064,42 @@ function histByDate(){
       <select id="hf-type" class="wsel" aria-label="메시지 타입"><option value="">메시지타입</option>${['알림톡 텍스트','알림톡 이미지'].map(t=>`<option ${f.type===t?'selected':''}>${t}</option>`).join('')}</select>
       <label class="wsrch"><input id="hf-q" placeholder="제목 또는 내용 입력" value="${esc(f.q)}" aria-label="제목 찾기">${bi('search',18)}</label>
     </div>
-    <div class="wtw"><table class="wtable">
-      <colgroup><col style="width:15%"><col><col style="width:13%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:8%"><col style="width:9%"></colgroup>
+    <div class="wlay"><div class="wleft"><div class="wtw"><table class="wtable">
+      <colgroup><col style="width:138px"><col><col style="width:96px"><col style="width:62px"><col style="width:48px"><col style="width:48px"><col style="width:48px"><col style="width:68px"></colgroup>
       <thead><tr><th>전송일자</th><th>제목</th><th>메시지 타입</th><th>전송건수</th><th>성공</th><th>실패</th><th>대기</th><th>진행상황</th></tr></thead>
-      <tbody>${rows.map(h=>{const st=hst(h),wait=h.logs.filter(l=>!l.result||l.result==='대기'||l.result==='발송 중').length;return `<tr>
+      <tbody>${rows.map(h=>{const st=hst(h),wait=h.logs.filter(l=>!l.result||l.result==='대기'||l.result==='발송 중').length;return `<tr class="${h.id===sel?.id?'won':''}">
         <td class="tnum">${h.date.replace(/-/g,'.')} ${H_TIME(h)}</td>
-        <td class="wt"><button class="wlink" data-hdetail="${h.id}" title="${esc(h.title)}">${h.no?`[${h.no}회]`:'[직접]'}${esc(h.title)}</button></td>
+        <td class="wt"><button class="wlink" data-hsel="${h.id}" title="${esc(h.title)}">${h.no?`[${h.no}회]`:'[직접]'}${esc(h.title)}</button></td>
         <td>${H_TYPE(h)}</td><td class="tnum">${h.sent}</td><td class="tnum">${st.ok}</td><td class="tnum">${st.fail}</td><td class="tnum">${wait}</td>
         <td><span class="wst ${st.doing?'ing':''}">${st.doing?'진행중':'완료'}</span></td></tr>`;}).join('')||'<tr><td colspan="8" class="wempty">데이터가 없습니다.</td></tr>'}</tbody></table></div>
     <div class="wfoot"><button class="wbtn" id="hf-xls">엑셀다운로드</button></div>
     ${pages>1?`<nav class="pager" aria-label="쪽 넘기기"><button data-hpage="1" ${f.page===1?'disabled':''} aria-label="처음">«</button><button data-hpage="${f.page-1}" ${f.page===1?'disabled':''} aria-label="이전">‹</button>
       ${pg.map(i=>`<button data-hpage="${i}" class="${i===f.page?'on':''}">${i}</button>`).join('')}
-      <button data-hpage="${f.page+1}" ${f.page===pages?'disabled':''} aria-label="다음">›</button><button data-hpage="${pages}" ${f.page===pages?'disabled':''} aria-label="끝">»</button></nav>`:''}`;
+      <button data-hpage="${f.page+1}" ${f.page===pages?'disabled':''} aria-label="다음">›</button><button data-hpage="${pages}" ${f.page===pages?'disabled':''} aria-label="끝">»</button></nav>`:''}
+    </div>${sel?hPanel(sel):''}</div>`;
 }
-function histModal(id){
-  const h=S.history.find(x=>x.id===id),t=h.no?S.templates.find(x=>x.weekly):S.templates.find(x=>x.name===h.title),st=hst(h);
-  modal(`<div class="hm-head"><h3>${h.no?`[${h.no}회] `:''}${esc(h.title)}</h3><button class="ib" data-close aria-label="닫기">${bi('x',18)}</button></div>
-    <div class="small muted">${h.date.replace(/-/g,'.')} ${H_TIME(h)} · ${H_TYPE(h)}${t?' · '+esc(t.name):''}</div>
-    <div class="hsum"><div><span>전송건수</span><b class="tnum">${h.sent}</b></div><div><span>성공</span><b class="tnum">${st.ok}</b></div><div><span>실패</span><b class="tnum" ${st.fail?'style="color:var(--bad-ink)"':''}>${st.fail}</b></div><div><span>진행상황</span><b>${st.doing?'진행중':'완료'}</b></div></div>
-    ${h.fb?`<div class="small muted">성공 ${st.ok}건 중 ${h.fb}건은 카카오톡이 없어 문자로 대신 보냈어요.</div>`:''}
-    <div class="hm-body">${t?`<div>${phone(t,S.contacts.find(sendable),{'회차제목':h.title})}</div>`:''}
-      <div><div class="small" style="font-weight:700;color:var(--muted-strong);margin-bottom:6px">받은 고객 ${h.logs.length}명</div>
-        <ul class="hlog">${h.logs.map(l=>`<li><span><b>${esc(l.name)}</b><span class="small muted"> · ${esc(l.biz)}</span><br><span class="small tnum muted">${esc(l.phone)}</span></span>${resTag(l.result)}<button class="btn sm" data-hc="${esc(l.phone)}">내역</button></li>`).join('')}</ul></div></div>`);
+function hPanel(h){
+  const t=h.no?S.templates.find(x=>x.weekly):S.templates.find(x=>x.name===h.title),st=hst(h);
+  return `<aside class="card wright"><div class="card-h"><h3>${h.no?`[${h.no}회] `:''}${esc(h.title)}</h3></div>
+    <div class="small muted" style="margin:-8px 0 12px">${h.date.replace(/-/g,'.')} ${H_TIME(h)} · ${H_TYPE(h)}</div>
+    <div class="hsum hbtns">
+      <button data-hlist="all:${h.id}"><span>전송건수</span><b class="tnum">${h.sent}</b></button>
+      <button data-hlist="ok:${h.id}"><span>성공</span><b class="tnum">${st.ok}</b></button>
+      <button data-hlist="fail:${h.id}" ${st.fail?'class="bad"':''}><span>실패</span><b class="tnum">${st.fail}</b></button>
+      <div><span>진행상황</span><b>${st.doing?'진행중':'완료'}</b></div></div>
+    <div class="small muted" style="margin-top:6px">숫자 칸을 누르면 그 명단이 떠요.${h.fb?` 성공 중 ${h.fb}건은 문자로 대신 보냈어요.`:''}</div>
+    ${t?`<div style="margin-top:14px">${phone(t,S.contacts.find(sendable),{'회차제목':h.title})}</div>`:''}
+  </aside>`;
+}
+function listModal(kind,id){
+  const h=S.history.find(x=>x.id===id),isFail=l=>l.result==='실패';
+  const logs=h.logs.filter(l=>kind==='all'?true:kind==='fail'?isFail(l):!isFail(l));
+  const name={all:'전체 명단',ok:'성공 명단',fail:'실패 명단'}[kind];
+  modal(`<div class="hm-head"><h3>${name} <span class="tnum muted" style="font-weight:600">${logs.length}명</span></h3><button class="ib" data-close aria-label="닫기">${bi('x',18)}</button></div>
+    <div class="small muted">${h.no?`[${h.no}회] `:''}${esc(h.title)} · ${h.date.replace(/-/g,'.')} ${H_TIME(h)}</div>
+    <div class="gtabs" role="tablist">${[['all','전체',h.logs.length],['ok','성공',h.logs.filter(l=>!isFail(l)).length],['fail','실패',h.logs.filter(isFail).length]].map(([k,l,n])=>`<button role="tab" class="${k===kind?'on':''}" aria-selected="${k===kind}" data-hlist="${k}:${h.id}">${l}<span class="tnum">${n}</span></button>`).join('')}</div>
+    <div class="wtw"><table class="wtable wmini"><thead><tr><th>이름</th><th>상호</th><th>휴대폰</th><th>결과</th>${kind==='fail'?'<th>실패 사유</th>':''}<th></th></tr></thead>
+      <tbody>${logs.map(l=>`<tr><td>${esc(l.name)}</td><td>${esc(l.biz)}</td><td class="tnum">${esc(l.phone)}</td><td>${resTag(l.result)}</td>${kind==='fail'?`<td class="small">${esc(l.why||'번호 확인 필요')}</td>`:''}<td><button class="btn sm" data-hc="${esc(l.phone)}">내역</button></td></tr>`).join('')||`<tr><td colspan="${kind==='fail'?6:5}" class="wempty">${kind==='fail'?'실패한 고객이 없어요.':'명단이 없어요.'}</td></tr>`}</tbody></table></div>`);
   document.querySelector('#layer .modal').classList.add('hmodal');
 }
 function contactLedger(){
@@ -1099,7 +1133,7 @@ function seedLogs(){
     h.id=i+1;h.type=h.type||'정기';
     if(h.type==='정기'){h.tid=1;h.vars={'회차제목':h.title};}else{h.tid=2;h.vars={'신고기간':'2026년 2기 예정','제출기한':'10월 20일(화)'};}
     const pool=h.type==='직접'?S.contacts.filter(c=>c.gid===1&&!c.optout):S.contacts.filter(sendable);
-    h.logs=pool.slice(0,h.sent).map(c=>({phone:c.phone,name:c.name,biz:c.biz,at:`${h.date} ${h.type==='정기'?S.schedule.time:'14:20'}`,result:h.fb&&c.id===3?'문자대체':'알림톡'}));
+    h.logs=pool.slice(0,h.sent).map(c=>({phone:c.phone,name:c.name,biz:c.biz,at:`${h.date} ${h.type==='정기'?S.schedule.time:'14:20'}`,result:h.fb&&c.id===3?'문자대체':h.no===45&&c.id===8?'실패':'알림톡',why:h.no===45&&c.id===8?'없는 번호':''}));
     h.sent=h.logs.length;h.fb=h.logs.filter(l=>l.result!=='알림톡').length;h.ok=h.sent-h.fb;
   });
   S.history.push({id:99,date:'2026-09-29',no:41,type:'정기',title:'9월 5주차 세무일정',tid:1,vars:{'회차제목':'9월 5주차 세무일정'},sent:2,ok:2,fb:0,
@@ -1328,10 +1362,11 @@ document.addEventListener('click',e=>{
   if(d.tab){S.tab=d.tab;return render();}
   if('close' in d)return closeModal();
   if(d.hview){S.hView=d.hview;return render();}
-  if(d.hdetail)return histModal(+d.hdetail);
+  if(d.hsel){S.hSel=+d.hsel;return render();}
+  if(d.hlist){const [k,id]=d.hlist.split(':');return listModal(k,+id);}
   if(d.hpage){S.hf.page=+d.hpage;return render();}
   if(d.hopen){S.hOpen=S.hOpen===+d.hopen?null:+d.hopen;return render();}
-  if(d.hc){S.view='kakao';S.tab='결과';S.hView='contact';S.hContact=d.hc;S.hMsg=null;render();return;}
+  if(d.hc){closeModal();S.view='kakao';S.tab='결과';S.hView='contact';S.hContact=d.hc;S.hMsg=null;render();return;}
   if(d.hmsg){S.hMsg=+d.hmsg;return render();}
   if(d.tsel){S.tSel=+d.tsel;return render();}
   if(d.trow){S.tRow=+d.trow;return render();}
