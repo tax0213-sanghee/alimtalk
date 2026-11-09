@@ -503,6 +503,15 @@ td.tnum{white-space:nowrap}
 
 .thead,.titem{grid-template-columns:130px minmax(0,1.6fr) minmax(0,2fr) 70px}
 .thead .r,.titem .r{text-align:right}
+
+/* 발송결과 — 발송일별 (템플릿확인과 합침) */
+.thead.hcols,.titem.hcols{grid-template-columns:120px minmax(0,1.4fr) minmax(0,1.8fr) 56px 50px 58px}
+.hsum{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.hsum>div{background:#F7F7F9;border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;font-size:12px;color:var(--muted-strong)}
+.hsum b{font-size:17px;color:var(--ink)}
+.hlog{list-style:none;margin:10px 0 0;padding:0;max-height:360px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.hlog li{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);font-size:13px}
+.hlog li:last-child{border-bottom:0}
 </style>
 </head>
 <body>
@@ -617,7 +626,6 @@ const NAV=[
   {items:[{k:'lists',l:'발송명단확정',ic:'send',alert:()=>needList()}]},
   {items:[
     {k:'channel',l:'카톡채널ID',ic:'chat',alert:()=>chanOk()?0:1},
-    {k:'kakao',tab:'템플릿',l:'템플릿확인',ic:'doc'},
     {k:'kakao',tab:'주소록',l:'주소록',ic:'user',n:()=>S.contacts.length},
     {k:'kakao',tab:'결과',l:'발송결과',ic:'check',n:()=>S.reserved.length}
   ]},
@@ -964,15 +972,28 @@ function tResult(){
   ${S.hView==='date'?histByDate():histByContact()}`;
 }
 function histByDate(){
-  return `<section class="card"><div class="card-h"><h3>전송 내역</h3><span class="sub tnum">${S.history.length}회</span></div><div class="tw"><table>
-    <thead><tr><th>발송일</th><th>구분</th><th>내용</th><th class="r">받는 분</th><th class="r">알림톡</th><th class="r">문자대체</th><th class="r">명단</th></tr></thead>
-    <tbody>${S.history.map(h=>{const open=S.hOpen===h.id;return `<tr class="hov"><td class="tnum">${h.date}</td><td>${kindTag(h)}</td><td><b>${esc(h.title)}</b></td>
-      <td class="r tnum">${h.sent}</td><td class="r tnum">${h.ok}</td><td class="r tnum">${h.fb||'<span style="color:var(--faint)">—</span>'}</td>
-      <td class="r"><button class="btn sm" data-hopen="${h.id}" aria-expanded="${open}">${open?'접기':'명단 보기'}</button></td></tr>
-      ${open?`<tr class="sub"><td colspan="7"><div class="tw" style="background:var(--card)"><table>
-        <thead><tr><th>거래처</th><th>상호</th><th>휴대폰</th><th>결과</th><th>시각</th><th></th></tr></thead>
-        <tbody>${h.logs.map(l=>`<tr class="hov"><td><b>${esc(l.name)}</b></td><td>${esc(l.biz)}</td><td class="tnum">${esc(l.phone)}</td><td>${resTag(l.result)}</td><td class="tnum small">${esc(l.at)}</td>
-          <td class="r"><button class="btn sm" data-hc="${esc(l.phone)}">이 거래처 내역</button></td></tr>`).join('')}</tbody></table></div></td></tr>`:''}`}).join('')}</tbody></table></div></section>`;
+  const hs=[...S.history].sort((a,b)=>b.date.localeCompare(a.date));
+  if(!hs.some(h=>h.id===S.hSel)&&hs.length)S.hSel=hs[0].id;
+  const h=hs.find(x=>x.id===S.hSel);
+  const tOf=h=>h.no?S.templates.find(x=>x.weekly):S.templates.find(x=>x.name===h.title);
+  const dt=d=>{const x=new Date(d+'T00:00');return `${d.replace(/-/g,'.')} (${'일월화수목금토'[x.getDay()]})`;};
+  const t=h&&tOf(h),fail=h?h.logs.filter(l=>l.result==='실패').length:0;
+  return `<div class="tlay">
+    <section class="tlist">
+      <div class="thead hcols"><span>발송일자</span><span>템플릿명</span><span>내용</span><span class="r">받은 분</span><span class="r">알림톡</span><span class="r">문자대체</span></div>
+      <ul role="listbox" aria-label="보낸 알림톡 목록">${hs.map(x=>{const tx=tOf(x);return `<li><button class="titem hcols ${S.hSel===x.id?'on':''}" data-hsel="${x.id}" role="option" aria-selected="${S.hSel===x.id}">
+        <span class="small tnum">${dt(x.date)}</span><b>${esc(tx?.name||x.title)}</b>
+        <span class="small muted">${x.no?`${x.no}회 · `:'직접 전송 · '}${esc(x.title)}</span>
+        <span class="small tnum r">${x.sent}명</span><span class="small tnum r">${x.ok}</span><span class="small tnum r">${x.fb||'—'}</span></button></li>`;}).join('')||'<li class="empty">아직 보낸 알림톡이 없어요.</li>'}</ul>
+    </section>
+    ${h?`<section class="card tview"><div class="card-h"><h3>${esc(t?.name||h.title)}</h3>${tag('발송 완료','good')}</div>
+      <div class="small muted" style="margin:-6px 0 14px">${dt(h.date)} 발송 · ${h.no?h.no+'회 · ':''}${esc(h.title)}</div>
+      <div class="hsum"><div><span>받은 분</span><b class="tnum">${h.sent}</b></div><div><span>알림톡</span><b class="tnum">${h.ok}</b></div><div><span>문자대체</span><b class="tnum">${h.fb||0}</b></div><div><span>실패</span><b class="tnum" ${fail?'style="color:var(--bad-ink)"':''}>${fail}</b></div></div>
+      ${t?`<div style="margin-top:14px">${phone(t,S.contacts.find(sendable),{'회차제목':h.title})}</div>`:''}
+      <button class="btn" style="width:100%;height:42px;margin-top:14px" data-hopen="${h.id}" aria-expanded="${S.hOpen===h.id}">${S.hOpen===h.id?'명단 접기':`받은 고객 명단 보기 (${h.logs.length}명)`}</button>
+      ${S.hOpen===h.id?`<ul class="hlog">${h.logs.map(l=>`<li><span><b>${esc(l.name)}</b><span class="small muted"> · ${esc(l.biz)}</span><br><span class="small tnum muted">${esc(l.phone)}</span></span>${resTag(l.result)}<button class="btn sm" data-hc="${esc(l.phone)}">내역</button></li>`).join('')}</ul>`:''}
+    </section>`:''}
+  </div>`;
 }
 function contactLedger(){
   const m=new Map();
@@ -1234,6 +1255,7 @@ document.addEventListener('click',e=>{
   if(d.tab){S.tab=d.tab;return render();}
   if('close' in d)return closeModal();
   if(d.hview){S.hView=d.hview;return render();}
+  if(d.hsel){S.hSel=+d.hsel;S.hOpen=null;return render();}
   if(d.hopen){S.hOpen=S.hOpen===+d.hopen?null:+d.hopen;return render();}
   if(d.hc){S.view='kakao';S.tab='결과';S.hView='contact';S.hContact=d.hc;S.hMsg=null;render();return;}
   if(d.hmsg){S.hMsg=+d.hmsg;return render();}
