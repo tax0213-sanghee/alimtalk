@@ -411,7 +411,7 @@ button.bk-opt{border:0;cursor:pointer;font:inherit;font-size:12px;font-weight:70
 .nchip.on{border-color:var(--brand);background:var(--brand-soft)}.nchip.on b{color:var(--brand)}
 
 /* ── 화면 짜임: 회색 바탕 + 흰 둥근 상자. 맨 위는 경로 없이 큰 화면 제목 (관제탑과 같은 모양) ── */
-:root{--page:#F3F4F6}
+:root{--page:#FFFFFF}
 body{background:var(--page)}
 .top{position:static;height:auto;background:transparent;max-width:1280px;margin:0 auto;width:100%;box-sizing:border-box;padding-top:30px;padding-bottom:18px}
 .top .grp,.top .slash{display:none}
@@ -426,6 +426,11 @@ main{padding-top:0}
 .nchip{border-color:transparent;box-shadow:0 1px 2px rgb(20 20 25/.06)}
 .nchip.on{border-color:var(--brand)}
 td.tnum{white-space:nowrap}
+
+/* 흰 바탕 — 상자는 옅은 테두리로 구분 */
+.card,.stat,.bk-l,.bk-r{border:1px solid var(--line);box-shadow:none}
+.card .card{border:0}
+.nchip{border-color:var(--line);box-shadow:none}
 </style>
 </head>
 <body>
