@@ -7,6 +7,7 @@
 <meta name="robots" content="noindex">
 <script src="auth.js"></script>
 <script>AlimAuth.require();</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -528,6 +529,43 @@ td.tnum{white-space:nowrap}
 /* 카톡채널ID등록 — 상자 없이 */
 .chpage .card{border:0;border-radius:0;padding:0;box-shadow:none;background:none}
 .chpage .card+.card{margin-top:28px}
+.chpage{max-width:760px}
+
+/* ── 발송결과 › 발송일별 — 윙고 전송결과 표 모양 (글꼴 Noto Sans KR, 보통 굵기, 세로줄 있는 표) ── */
+.wfilters,.wtable,.wfoot,.pager{font-family:'Noto Sans KR',var(--font)}
+.hbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.wfilters{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+.wdate{position:relative;display:inline-flex;align-items:center;gap:10px;height:36px;padding:0 14px 0 18px;border-radius:4px;background:#F4F4F5;color:#222;cursor:pointer}
+.wdate input{border:0;background:none;font:inherit;font-size:14px;color:#222;width:110px;font-variant-numeric:tabular-nums}
+.wdate input::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.wdate input:focus{outline:none}.wdate:focus-within{box-shadow:0 0 0 1px var(--brand)}
+.wsel{height:36px;border:0;border-radius:4px;background:#F4F4F5;padding:0 30px 0 18px;font:inherit;font-size:14px;color:#222;min-width:134px}
+.wsrch{display:flex;align-items:center;height:36px;border-radius:4px;background:#F4F4F5;padding:0 12px 0 14px;width:244px;color:#222}
+.wsrch input{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:13px;outline:none}
+.wsrch input::placeholder{color:#B5B5BB}
+.wsrch svg{flex:none;padding-left:10px;box-sizing:content-box;border-left:1px solid #D9D9DE}
+.wtw{overflow-x:auto}
+.wtable{width:100%;min-width:760px;border-collapse:collapse;table-layout:fixed;font-size:14px;color:#222}
+.wtable thead th{background:#F7F7F7;font-weight:400;color:#555;height:46px;border-top:1px solid #333;border-bottom:1px solid #E1E1E1;border-right:1px solid #E1E1E1;text-align:center;padding:0 6px}
+.wtable td{height:46px;border-bottom:1px solid #E7E7E7;border-right:1px solid #E7E7E7;text-align:center;padding:0 8px;font-weight:400;white-space:nowrap}
+.wtable th:last-child,.wtable td:last-child{border-right:0}
+.wtable tbody tr:hover td{background:#FAFAFB}
+.wtable td.wt{text-align:left}
+.wlink{border:0;background:none;padding:0;font:inherit;color:var(--brand);cursor:pointer;text-decoration:underline;text-underline-offset:4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;text-align:left}
+.wlink:hover{color:var(--brand-dark)}
+.wst{display:inline-flex;align-items:center;gap:5px}
+.wst::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--brand)}
+.wst.ing::before{background:#F5A524}
+.wempty{height:120px!important;color:#888}
+.wfoot{display:flex;justify-content:flex-end;margin-top:10px}
+.wbtn{height:36px;padding:0 28px;border:1px solid #CFCFD4;border-radius:4px;background:#fff;font:inherit;font-size:14px;color:#222;cursor:pointer}
+.wbtn:hover{border-color:#999}
+.modal.hmodal{max-width:760px}
+.hm-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hm-head h3{margin:0;font-size:17px}
+.hm-body{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start}
+.hm-body .hlog{margin:0;max-height:520px}
+@media (max-width:760px){.hm-body{grid-template-columns:1fr}.wsrch{width:100%}}
 </style>
 </head>
 <body>
@@ -590,7 +628,7 @@ const S={
   gfilter:'all', sel:new Set(), renaming:false, gq:'', gsort:'made', chanFlow:{}, lSel:null, ld:null, csort:{k:null,dir:1}, page:1, editMode:false, nextGid:10, nextId:100,
   tSel:1,
   send:{tid:null,mode:'groups',gids:new Set([1,2]),picked:[],vars:{},when:'now',at:'',checked:false,armed:false},
-  reserved:[], hView:'date', hOpen:null, hContact:null, hMsg:null, hq:'',
+  reserved:[], hView:'date', hf:{from:(()=>{const d=new Date();d.setMonth(d.getMonth()-3);return d.toISOString().slice(0,10);})(),to:new Date().toISOString().slice(0,10),type:'',q:'',page:1}, hOpen:null, hContact:null, hMsg:null, hq:'',
   history:[
     {date:'2026-10-27',no:45,title:'10월 5주차 세무일정',sent:11,fb:0},
     {date:'2026-10-20',no:44,title:'10월 4주차 세무일정',sent:11,fb:1},
@@ -984,34 +1022,51 @@ function tResult(){
   return `${S.reserved.length?`<section class="card"><div class="card-h"><h3>예약내역</h3><span class="sub tnum">${S.reserved.length}건</span></div><div class="tw"><table>
     <thead><tr><th>예약 시각</th><th>템플릿</th><th class="r">받는 분</th><th class="r">관리</th></tr></thead>
     <tbody>${S.reserved.map(r=>`<tr class="hov"><td class="tnum">${esc(r.at.replace('T',' '))}</td><td><b>${esc(r.title)}</b></td><td class="r tnum">${r.n}</td><td class="r"><button class="btn sm danger" data-unres="${r.id}">예약 취소</button></td></tr>`).join('')}</tbody></table></div></section>`:''}
-  <div class="hstack" style="margin-bottom:14px"><div class="gtabs" role="tablist" aria-label="보기 방식"><button role="tab" data-hview="date" aria-selected="${S.hView==='date'}" class="${S.hView==='date'?'on':''}">발송일별<span class="tnum">${S.history.length}</span></button><button role="tab" data-hview="contact" aria-selected="${S.hView==='contact'}" class="${S.hView==='contact'?'on':''}">거래처별<span class="tnum">${new Set(S.history.flatMap(h=>h.logs.map(l=>l.phone))).size}</span></button></div></div>
+  <div class="hbar"><div class="gtabs" role="tablist" aria-label="보기 방식"><button role="tab" data-hview="date" aria-selected="${S.hView==='date'}" class="${S.hView==='date'?'on':''}">발송일별<span class="tnum">${S.history.length}</span></button><button role="tab" data-hview="contact" aria-selected="${S.hView==='contact'}" class="${S.hView==='contact'?'on':''}">거래처별<span class="tnum">${new Set(S.history.flatMap(h=>h.logs.map(l=>l.phone))).size}</span></button></div></div>
   ${S.hView==='date'?histByDate():histByContact()}`;
 }
 /* 발송 한 회의 성공 · 실패 · 진행 — 문자로 대신 간 것도 성공으로 센다 */
 const hst=h=>{const fail=h.logs.filter(l=>l.result==='실패').length,doing=h.logs.some(l=>!l.result||l.result==='대기'||l.result==='발송 중');return {fail,ok:Math.max(0,h.sent-fail-(doing?h.logs.filter(l=>!l.result||l.result==='대기'||l.result==='발송 중').length:0)),doing};};
+const H_TIME=h=>h.time||(h.no?'10:00':'14:20');
+const H_TYPE=h=>{const t=h.no?S.templates.find(x=>x.weekly):S.templates.find(x=>x.name===h.title);return t?.image?'알림톡 이미지':'알림톡 텍스트';};
+const H_PAGE=10;
+function hRows(){const f=S.hf;const q=f.q.trim();
+  return [...S.history].filter(h=>h.date>=f.from&&h.date<=f.to&&(!f.type||H_TYPE(h)===f.type)&&(!q||h.title.includes(q)))
+    .sort((a,b)=>(b.date+H_TIME(b)).localeCompare(a.date+H_TIME(a)));}
 function histByDate(){
-  const hs=[...S.history].sort((a,b)=>b.date.localeCompare(a.date));
-  if(!hs.some(h=>h.id===S.hSel)&&hs.length)S.hSel=hs[0].id;
-  const h=hs.find(x=>x.id===S.hSel);
-  const tOf=h=>h.no?S.templates.find(x=>x.weekly):S.templates.find(x=>x.name===h.title);
-  const dt=d=>{const x=new Date(d+'T00:00');return `${d.replace(/-/g,'.')} (${'일월화수목금토'[x.getDay()]})`;};
-  const t=h&&tOf(h),fail=h?h.logs.filter(l=>l.result==='실패').length:0;
-  return `<div class="tlay">
-    <section class="tlist">
-      <div class="thead hcols"><span>발송일자</span><span>템플릿명</span><span class="r">전송건수</span><span class="r">성공</span><span class="r">실패</span><span class="r">진행상황</span></div>
-      <ul role="listbox" aria-label="보낸 알림톡 목록">${hs.map(x=>{const tx=tOf(x);return `<li><button class="titem hcols ${S.hSel===x.id?'on':''}" data-hsel="${x.id}" role="option" aria-selected="${S.hSel===x.id}">
-        <span class="small tnum">${dt(x.date)}</span><b>${esc(tx?.name||x.title)}</b>
-        <span class="small tnum r">${x.sent}</span><span class="small tnum r">${hst(x).ok}</span><span class="small tnum r" ${hst(x).fail?'style="color:var(--bad-ink);font-weight:700"':''}>${hst(x).fail}</span><span class="r">${hst(x).doing?tag('진행 중','warn'):tag('완료','good')}</span></button></li>`;}).join('')||'<li class="empty">아직 보낸 알림톡이 없어요.</li>'}</ul>
-    </section>
-    ${h?`<section class="card tview"><div class="card-h"><h3>${esc(t?.name||h.title)}</h3>${tag('발송 완료','good')}</div>
-      <div class="small muted" style="margin:-6px 0 14px">${dt(h.date)} 발송 · ${h.no?h.no+'회 · ':''}${esc(h.title)}</div>
-      <div class="hsum"><div><span>전송건수</span><b class="tnum">${h.sent}</b></div><div><span>성공</span><b class="tnum">${hst(h).ok}</b></div><div><span>실패</span><b class="tnum" ${hst(h).fail?'style="color:var(--bad-ink)"':''}>${hst(h).fail}</b></div><div><span>진행상황</span><b>${hst(h).doing?'진행 중':'완료'}</b></div></div>
-      ${h.fb?`<div class="small muted" style="margin-top:6px">성공 ${hst(h).ok}건 중 ${h.fb}건은 카카오톡이 없어 문자로 대신 보냈어요.</div>`:''}
-      ${t?`<div style="margin-top:14px">${phone(t,S.contacts.find(sendable),{'회차제목':h.title})}</div>`:''}
-      <button class="btn" style="width:100%;height:42px;margin-top:14px" data-hopen="${h.id}" aria-expanded="${S.hOpen===h.id}">${S.hOpen===h.id?'명단 접기':`받은 고객 명단 보기 (${h.logs.length}명)`}</button>
-      ${S.hOpen===h.id?`<ul class="hlog">${h.logs.map(l=>`<li><span><b>${esc(l.name)}</b><span class="small muted"> · ${esc(l.biz)}</span><br><span class="small tnum muted">${esc(l.phone)}</span></span>${resTag(l.result)}<button class="btn sm" data-hc="${esc(l.phone)}">내역</button></li>`).join('')}</ul>`:''}
-    </section>`:''}
-  </div>`;
+  const f=S.hf,all=hRows(),pages=Math.max(1,Math.ceil(all.length/H_PAGE));if(f.page>pages)f.page=pages;
+  const rows=all.slice((f.page-1)*H_PAGE,f.page*H_PAGE);
+  const pg=[];{let a=Math.max(1,f.page-4),b=Math.min(pages,a+9);a=Math.max(1,b-9);for(let i=a;i<=b;i++)pg.push(i);}
+  const CAL='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/><path d="m9 15 2 2 4-4"/></svg>';
+  return `<div class="wfilters">
+      <label class="wdate">${CAL}<input type="date" id="hf-from" value="${esc(f.from)}" aria-label="시작일"></label><span class="muted">~</span>
+      <label class="wdate">${CAL}<input type="date" id="hf-to" value="${esc(f.to)}" aria-label="끝날"></label>
+      <select id="hf-type" class="wsel" aria-label="메시지 타입"><option value="">메시지타입</option>${['알림톡 텍스트','알림톡 이미지'].map(t=>`<option ${f.type===t?'selected':''}>${t}</option>`).join('')}</select>
+      <label class="wsrch"><input id="hf-q" placeholder="제목 또는 내용 입력" value="${esc(f.q)}" aria-label="제목 찾기">${bi('search',18)}</label>
+    </div>
+    <div class="wtw"><table class="wtable">
+      <colgroup><col style="width:15%"><col><col style="width:13%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:8%"><col style="width:9%"></colgroup>
+      <thead><tr><th>전송일자</th><th>제목</th><th>메시지 타입</th><th>전송건수</th><th>성공</th><th>실패</th><th>대기</th><th>진행상황</th></tr></thead>
+      <tbody>${rows.map(h=>{const st=hst(h),wait=h.logs.filter(l=>!l.result||l.result==='대기'||l.result==='발송 중').length;return `<tr>
+        <td class="tnum">${h.date.replace(/-/g,'.')} ${H_TIME(h)}</td>
+        <td class="wt"><button class="wlink" data-hdetail="${h.id}" title="${esc(h.title)}">${h.no?`[${h.no}회]`:'[직접]'}${esc(h.title)}</button></td>
+        <td>${H_TYPE(h)}</td><td class="tnum">${h.sent}</td><td class="tnum">${st.ok}</td><td class="tnum">${st.fail}</td><td class="tnum">${wait}</td>
+        <td><span class="wst ${st.doing?'ing':''}">${st.doing?'진행중':'완료'}</span></td></tr>`;}).join('')||'<tr><td colspan="8" class="wempty">데이터가 없습니다.</td></tr>'}</tbody></table></div>
+    <div class="wfoot"><button class="wbtn" id="hf-xls">엑셀다운로드</button></div>
+    ${pages>1?`<nav class="pager" aria-label="쪽 넘기기"><button data-hpage="1" ${f.page===1?'disabled':''} aria-label="처음">«</button><button data-hpage="${f.page-1}" ${f.page===1?'disabled':''} aria-label="이전">‹</button>
+      ${pg.map(i=>`<button data-hpage="${i}" class="${i===f.page?'on':''}">${i}</button>`).join('')}
+      <button data-hpage="${f.page+1}" ${f.page===pages?'disabled':''} aria-label="다음">›</button><button data-hpage="${pages}" ${f.page===pages?'disabled':''} aria-label="끝">»</button></nav>`:''}`;
+}
+function histModal(id){
+  const h=S.history.find(x=>x.id===id),t=h.no?S.templates.find(x=>x.weekly):S.templates.find(x=>x.name===h.title),st=hst(h);
+  modal(`<div class="hm-head"><h3>${h.no?`[${h.no}회] `:''}${esc(h.title)}</h3><button class="ib" data-close aria-label="닫기">${bi('x',18)}</button></div>
+    <div class="small muted">${h.date.replace(/-/g,'.')} ${H_TIME(h)} · ${H_TYPE(h)}${t?' · '+esc(t.name):''}</div>
+    <div class="hsum"><div><span>전송건수</span><b class="tnum">${h.sent}</b></div><div><span>성공</span><b class="tnum">${st.ok}</b></div><div><span>실패</span><b class="tnum" ${st.fail?'style="color:var(--bad-ink)"':''}>${st.fail}</b></div><div><span>진행상황</span><b>${st.doing?'진행중':'완료'}</b></div></div>
+    ${h.fb?`<div class="small muted">성공 ${st.ok}건 중 ${h.fb}건은 카카오톡이 없어 문자로 대신 보냈어요.</div>`:''}
+    <div class="hm-body">${t?`<div>${phone(t,S.contacts.find(sendable),{'회차제목':h.title})}</div>`:''}
+      <div><div class="small" style="font-weight:700;color:var(--muted-strong);margin-bottom:6px">받은 고객 ${h.logs.length}명</div>
+        <ul class="hlog">${h.logs.map(l=>`<li><span><b>${esc(l.name)}</b><span class="small muted"> · ${esc(l.biz)}</span><br><span class="small tnum muted">${esc(l.phone)}</span></span>${resTag(l.result)}<button class="btn sm" data-hc="${esc(l.phone)}">내역</button></li>`).join('')}</ul></div></div>`);
+  document.querySelector('#layer .modal').classList.add('hmodal');
 }
 function contactLedger(){
   const m=new Map();
@@ -1273,7 +1328,8 @@ document.addEventListener('click',e=>{
   if(d.tab){S.tab=d.tab;return render();}
   if('close' in d)return closeModal();
   if(d.hview){S.hView=d.hview;return render();}
-  if(d.hsel){S.hSel=+d.hsel;S.hOpen=null;return render();}
+  if(d.hdetail)return histModal(+d.hdetail);
+  if(d.hpage){S.hf.page=+d.hpage;return render();}
   if(d.hopen){S.hOpen=S.hOpen===+d.hopen?null:+d.hopen;return render();}
   if(d.hc){S.view='kakao';S.tab='결과';S.hView='contact';S.hContact=d.hc;S.hMsg=null;render();return;}
   if(d.hmsg){S.hMsg=+d.hmsg;return render();}
@@ -1315,6 +1371,9 @@ document.addEventListener('click',e=>{
     case 'ch-connect':{const c=document.getElementById('ch-code')?.value.replace(/\D/g,'')||'';if(c.length<4)return toast('카카오톡으로 받은 인증번호를 넣어 주세요.');
       S.office.channel=S.chanFlow.id;S.chanStatus='연결됨';S.chanDate=new Date().toISOString().slice(0,10);S.chanFlow={};
       toast('등록됐어요. 세무사 알림톡 그룹에도 저절로 들어갔습니다.');render();break;}
+    case 'hf-xls':{const rows=hRows();if(!rows.length)return toast('내려받을 내역이 없습니다.');
+      const aoa=[['전송일자','제목','메시지 타입','전송건수','성공','실패','대기','진행상황'],...rows.map(h=>{const st=hst(h);return [h.date+' '+H_TIME(h),(h.no?`[${h.no}회]`:'[직접]')+h.title,H_TYPE(h),h.sent,st.ok,st.fail,0,st.doing?'진행중':'완료'];})];
+      const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=[{wch:17},{wch:32},{wch:13},{wch:9},{wch:7},{wch:7},{wch:7},{wch:9}];XLSX.utils.book_append_sheet(wb,ws,'발송결과');XLSX.writeFile(wb,`발송결과_${new Date().toISOString().slice(0,10)}.xlsx`);break;}
     case 'l-save':{const n=S.notices.find(x=>x.id===S.lSel),l=draftList();if(!recipientsOf(n,l).length)return toast('받을 사람을 한 명 이상 골라 주세요. 안 보내시려면 「이번엔 보내지 않기」를 누르세요.');
       const d=new Date();n.list={...l,at:`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`};
       toast(`${recipientsOf(n).length}명 명단을 저장했습니다. 마감 전까지 고칠 수 있어요.`);render();break;}
@@ -1370,12 +1429,14 @@ document.addEventListener('input',e=>{
   const id=e.target.id;
   if(id==='q'){S.q=e.target.value;S.page=1;keepFocus('q');}
   if(id==='gq'){S.gq=e.target.value;keepFocus('gq');}
+  if(id==='hf-q'){S.hf.q=e.target.value;S.hf.page=1;keepFocus('hf-q');}
   if(id==='lq'){S.ld.q=e.target.value;keepFocus('lq');}
   if(id==='hq'){S.hq=e.target.value;keepFocus('hq');}
   if(e.target.dataset.svar!==undefined){S.send.vars[e.target.dataset.svar]=e.target.value;S.send.checked=false;S.send.armed=false;keepFocus(id);}
 });
 document.addEventListener('change',e=>{
   const id=e.target.id;
+  if(['hf-from','hf-to','hf-type'].includes(e.target.id)){S.hf[{'hf-from':'from','hf-to':'to','hf-type':'type'}[e.target.id]]=e.target.value;S.hf.page=1;return render();}
   if(e.target.id==='lc-all'){const d=S.ld,q=d.q.trim().replace(/-/g,'');S.contacts.filter(c=>!c.optout&&(d.gf==='all'||(d.gf==='none'?c.gid==null:c.gid===d.gf))&&(!q||(c.name+c.phone.replace(/-/g,'')+c.biz+(c.title||'')).includes(q))).forEach(c=>e.target.checked?d.ids.add(c.id):d.ids.delete(c.id));return render();}
   if(e.target.dataset.lc){const k=+e.target.dataset.lc;e.target.checked?S.ld.ids.add(k):S.ld.ids.delete(k);return render();}
   if(e.target.dataset.mute){const c=e.target.dataset.mute,m=new Set(S.office.muted||[]);e.target.checked?m.add(c):m.delete(c);S.office.muted=[...m];
