@@ -1068,7 +1068,7 @@ function histByDate(){
       <label class="wsrch"><input id="hf-q" placeholder="제목 또는 내용 입력" value="${esc(f.q)}" aria-label="제목 찾기">${bi('search',18)}</label>
     </div>
     <div class="wlay"><div class="wleft"><div class="wtw"><table class="wtable">
-      <colgroup><col style="width:138px"><col><col style="width:62px"><col style="width:48px"><col style="width:48px"><col style="width:48px"><col style="width:68px"></colgroup>
+      <colgroup><col style="width:136px"><col><col style="width:76px"><col style="width:66px"><col style="width:66px"><col style="width:66px"><col style="width:88px"></colgroup>
       <thead><tr><th>전송일자</th><th>제목</th><th>전송건수</th><th>성공</th><th>실패</th><th>대기</th><th>진행상황</th></tr></thead>
       <tbody>${rows.map(h=>{const st=hst(h),wait=h.logs.filter(l=>!l.result||l.result==='대기'||l.result==='발송 중').length;return `<tr class="${h.id===sel?.id?'won':''}">
         <td class="tnum">${h.date.replace(/-/g,'.')} ${H_TIME(h)}</td>
@@ -1083,8 +1083,7 @@ function histByDate(){
 }
 function hPanel(h){
   const t=h.no?S.templates.find(x=>x.weekly):S.templates.find(x=>x.name===h.title);
-  return `<aside class="card wright"><div class="card-h"><h3>${h.no?`[${h.no}회] `:''}${esc(h.title)}</h3></div>
-    <div class="small muted" style="margin:-8px 0 12px">${h.date.replace(/-/g,'.')} ${H_TIME(h)} 발송</div>
+  return `<aside class="card wright">
     ${t?phone(t,S.contacts.find(sendable),{'회차제목':h.title}):''}
   </aside>`;
 }
