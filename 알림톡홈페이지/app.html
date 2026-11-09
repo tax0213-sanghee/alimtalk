@@ -460,6 +460,11 @@ td.tnum{white-space:nowrap}
 .top>*{order:0}
 .top .sp{flex:1}
 .top h1{order:1;flex:0 0 100%;white-space:normal}
+
+/* 카카오톡 채널 문의 버튼 — 화면 오른쪽 아래 (랜딩과 같은 모양) */
+.kakao-float{position:fixed;right:24px;bottom:24px;z-index:90;width:58px;height:58px;border-radius:50%;background:#FEE500;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(43,33,64,.25);transition:transform .15s}
+.kakao-float:hover{transform:scale(1.06)}
+@media (max-width:640px){.kakao-float{right:16px;bottom:16px;width:52px;height:52px}}
 </style>
 </head>
 <body>
@@ -1312,5 +1317,8 @@ render();
   document.getElementById('logout').addEventListener('click',function(){AlimAuth.signOut();location.replace('/login?bye=1');});
 })();
 </script>
+<a href="https://pf.kakao.com/_TZegG/chat" target="_blank" rel="noopener" class="kakao-float" aria-label="카카오톡 채널로 문의하기" title="카카오톡 채널로 문의하기">
+  <svg width="30" height="30" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 5C9.373 5 4 9.163 4 14.3c0 3.31 2.24 6.217 5.61 7.86-.247.9-.894 3.26-1.024 3.766-.16.626.23.618.484.45.2-.132 3.176-2.15 4.463-3.02.802.117 1.63.18 2.467.18 6.627 0 12-4.163 12-9.236C28 9.163 22.627 5 16 5z" fill="#391B1B"/></svg>
+</a>
 </body>
 </html>
