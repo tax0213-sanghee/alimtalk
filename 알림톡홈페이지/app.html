@@ -478,6 +478,16 @@ td.tnum{white-space:nowrap}
 .tbody mark{background:#FFF3B0;color:inherit;border-radius:3px;padding:0 2px}
 @media (max-width:1100px){.tview-in{grid-template-columns:1fr}}
 @media (max-width:800px){.tlay{grid-template-columns:1fr}}
+
+/* 템플릿확인 비율 — 목록 2 : 내용 1 */
+.tlay{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+.tview{position:sticky;top:12px}
+.tview-in{grid-template-columns:1fr;gap:16px}
+.tview-in .phone{margin:0 auto}
+.titem{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1.4fr);align-items:center;gap:12px;padding:14px 14px;border-bottom:1px solid var(--line);border-radius:8px}
+.tlist li:last-child .titem{border-bottom:0}
+.titem .tmark{margin:0 0 0 6px;vertical-align:1px}
+@media (max-width:800px){.titem{grid-template-columns:1fr}.tview{position:static}}
 </style>
 </head>
 <body>
@@ -859,10 +869,10 @@ function tTemplates(){
   <div class="tlay">
     <section class="card tlist"><div class="card-h"><h3>템플릿</h3><span class="sub tnum">${S.templates.length}개</span></div>
       <ul role="listbox" aria-label="템플릿 목록">${S.templates.map(x=>`<li><button class="titem ${S.tSel===x.id?'on':''}" data-tsel="${x.id}" role="option" aria-selected="${S.tSel===x.id}">
-        <b>${esc(x.name)}</b><span class="small muted">${esc(x.category)} · 승인 ${x.approvedAt}</span>${x.weekly?'<span class="tmark">매주 자동</span>':''}</button></li>`).join('')}</ul>
+        <b>${esc(x.name)}${x.weekly?' <span class="tmark">매주 자동</span>':''}</b><span class="small muted">${esc(x.category)}</span><span class="small muted tnum">승인 ${x.approvedAt}</span><span class="small muted">${extraVars(x.body).length?'입력: '+extraVars(x.body).map(esc).join(', '):'입력 없음'}</span></button></li>`).join('')}</ul>
     </section>
     ${t?`<section class="card tview"><div class="card-h"><h3>${esc(t.name)}</h3>${t.weekly?tag('매주 자동','info'):tag('검수 완료','good')}
-        <span class="r"><button class="btn primary" id="to-send">이 템플릿으로 카카오톡 전송 ›</button></span></div>
+        </div>
       <div class="small muted" style="margin:-6px 0 16px">${esc(t.category)} · 카카오 승인 ${t.approvedAt}</div>
       <div class="tview-in">
         <div>${phone(t,S.contacts.find(sendable))}</div>
@@ -872,6 +882,7 @@ function tTemplates(){
           <div class="note" style="margin-top:12px"><b>노란 칸</b>은 받는 분마다 자동으로 바뀌어요.${ev.length?`<br>보낼 때 직접 넣는 칸: <b>${ev.map(esc).join(', ')}</b>`:''}</div>
         </div>
       </div>
+      <button class="btn primary" id="to-send" style="width:100%;height:44px;margin-top:16px">이 템플릿으로 카카오톡 전송 ›</button>
     </section>`:'<section class="card"><div class="empty">아직 승인된 템플릿이 없어요.</div></section>'}
   </div>`;
 }
