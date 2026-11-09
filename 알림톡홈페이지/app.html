@@ -759,7 +759,7 @@ render();
   document.getElementById('me-name').textContent=me.name+' 세무사';
   document.title=me.office+' · 세무사 알림톡';
   render();
-  document.getElementById('logout').addEventListener('click',function(){AlimAuth.signOut();location.replace('login.html');});
+  document.getElementById('logout').addEventListener('click',function(){AlimAuth.signOut();location.replace('/login?bye=1');});
 })();
 </script>
 </body>

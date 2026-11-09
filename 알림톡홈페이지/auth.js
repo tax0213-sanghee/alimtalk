@@ -35,6 +35,6 @@
     },
     signOut: function () { try { localStorage.removeItem(SESSION); sessionStorage.removeItem(SESSION); } catch (e) {} },
     /** 관리센터처럼 로그인해야 들어오는 화면 맨 앞에서 부른다 */
-    require: function () { var s = this.current(); if (!s) { location.replace('login.html?next=' + encodeURIComponent(location.pathname.split('/').pop() || 'app.html')); } return s; }
+    require: function () { var s = this.current(); if (!s) { location.replace('/login?next=' + encodeURIComponent(location.pathname.split('/').pop() || 'app')); } return s; }
   };
 })();

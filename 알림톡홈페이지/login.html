@@ -6,55 +6,129 @@
 <title>로그인 · 세무사 알림톡</title>
 <meta name="robots" content="noindex">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="auth.css">
+<link rel="stylesheet" href="/auth.css">
 </head>
 <body>
-<header class="top">
-  <a class="logo" href="/"><i>알림</i>세무사 알림톡</a>
-  <nav><a href="/#apply">서비스 신청</a><a href="signup.html">회원가입</a></nav>
-</header>
-<main>
-  <section class="box" aria-labelledby="t">
-    <h1 id="t">관리센터 로그인</h1>
-    <p class="sub">주소록 관리, 카카오톡 전송, 이용료 결제를 한 곳에서 합니다.</p>
+<!-- 택스팟 로그인과 같은 짜임: 한 장 안에서 「로그인」 ↔ 「사무실 만들기(?mode=new)」를 오간다 -->
+<div class="page">
+  <div class="sheet" id="sheet">
     <p class="demo">지금은 데모입니다. 회원 정보가 이 브라우저에만 저장됩니다.</p>
+    <div class="hello">
+      <p><b class="brand">세무사 알림톡</b>에 오신 것을 환영합니다.</p>
+      <p id="hello2"><b>로그인</b>해 주세요.</p>
+    </div>
+
     <form id="f" novalidate>
-      <div id="msg" class="alert bad" role="alert" hidden></div>
-      <div class="fl"><label for="email">이메일</label><input id="email" class="inp" type="email" autocomplete="username" placeholder="office@example.com" required></div>
-      <div class="fl"><label for="pw">비밀번호</label><input id="pw" class="inp" type="password" autocomplete="current-password" placeholder="비밀번호" required></div>
-      <div class="between">
-        <label class="chk"><input type="checkbox" id="keep" checked> 로그인 상태 유지</label>
-        <a href="#" id="find">비밀번호를 잊으셨나요?</a>
+      <div class="fields" id="fields"></div>
+
+      <div class="under">
+        <label class="dot" id="keep-wrap"><input type="checkbox" id="keep"><span>이메일 저장</span></label>
+        <div class="ways">
+          <a class="quiet" href="#" id="find">아이디 · 비밀번호 찾기</a>
+          <span class="bar" id="bar">|</span>
+          <a class="go" href="/login?mode=new" id="switch">사무실 만들기</a>
+        </div>
       </div>
-      <button class="btn primary" type="submit" id="go">로그인</button>
+
+      <div class="note" id="msg" role="alert" hidden></div>
+      <button class="btn" type="submit" id="go">로그인</button>
+      <p class="fine" id="fine" hidden>사무실을 만들면 <a href="#" id="terms" style="color:inherit;text-decoration:underline">이용약관 · 개인정보 처리방침</a>에 동의하는 것으로 봅니다.</p>
     </form>
-    <div class="divider">처음이신가요?</div>
-    <a class="btn" style="width:100%" href="signup.html">회원가입</a>
-    <p class="foot">문의 <a href="https://pf.kakao.com/" target="_blank" rel="noopener">카카오톡 채널 상담</a></p>
-  </section>
-</main>
-<script src="auth.js"></script>
+  </div>
+  <a class="intro" href="/">세무사 알림톡이 처음이신가요? 소개 보기 ›</a>
+</div>
+
+<script src="/auth.js"></script>
 <script>
-  var next = new URLSearchParams(location.search).get('next') || 'app.html';
-  if (!/^[\w.-]+\.html$/.test(next)) next = 'app.html';
-  if (AlimAuth.current()) location.replace(next);
-  var msg = document.getElementById('msg');
-  var q = new URLSearchParams(location.search);
-  if (q.get('joined')) { msg.className = 'alert good'; msg.textContent = '가입되었습니다. 방금 만든 이메일과 비밀번호로 로그인해 주세요.'; msg.hidden = false; document.getElementById('email').value = q.get('joined'); document.getElementById('pw').focus(); }
-  else document.getElementById('email').focus();
-  document.getElementById('find').onclick = function (e) {
-    e.preventDefault(); msg.className = 'alert good';
-    msg.textContent = '데모에서는 비밀번호 찾기를 쓸 수 없습니다. 실서비스에서는 가입한 이메일로 재설정 링크를 보냅니다.'; msg.hidden = false;
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var IC = {
+    user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    building: '<path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9v.01M9 12v.01M9 15v.01M9 18v.01"/>',
+    brief: '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M8 12h8M8 16h5"/>'
   };
-  document.getElementById('f').addEventListener('submit', async function (e) {
+  var icon = function (n) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + IC[n] + '</svg>'; };
+
+  var NEW = new URLSearchParams(location.search).get('mode') === 'new';
+  var next = new URLSearchParams(location.search).get('next') || 'app.html';
+  if (!/^[\w.-]+(\.html)?$/.test(next)) next = 'app.html';
+  if (AlimAuth.current() && !NEW) { location.replace('/' + next); return; }
+
+  /* 칸 — 택스팟 로그인칸: [아이콘 이름 | 입력] 한 상자 */
+  var FIELDS = NEW ? [
+    ['office', '사무실', 'building', 'text', '예: 세무법인 다우', 'organization'],
+    ['biz', '사업자등록번호', 'brief', 'text', '예: 123-45-67890', 'off'],
+    ['name', '대표자', 'user', 'text', '예: 선종문', 'name'],
+    ['phone', '휴대폰', 'user', 'tel', '예: 010-1234-5678', 'tel'],
+    ['email', '이메일', 'user', 'email', 'name@example.com', 'username'],
+    ['pw', '비밀번호', 'lock', 'password', '6자 이상 입력하세요', 'new-password']
+  ] : [
+    ['email', '이메일', 'user', 'email', 'name@example.com', 'username'],
+    ['pw', '비밀번호', 'lock', 'password', '비밀번호를 입력하세요', 'current-password']
+  ];
+  $('fields').innerHTML = FIELDS.map(function (f) {
+    return '<label class="lf"><span class="nm">' + icon(f[2]) + f[1] + '</span><input id="' + f[0] + '" type="' + f[3] + '" placeholder="' + f[4] + '" autocomplete="' + f[5] + '"' + (f[0] === 'biz' || f[0] === 'phone' ? ' inputmode="numeric"' : '') + '></label>';
+  }).join('');
+
+  if (NEW) {
+    document.title = '사무실 만들기 · 세무사 알림톡';
+    $('sheet').classList.add('new');
+    $('hello2').innerHTML = '<b>사무실</b>을 만들어 주세요.';
+    $('find').hidden = true; $('bar').hidden = true;
+    $('switch').textContent = '로그인'; $('switch').href = '/login';
+    $('go').textContent = '사무실 만들고 시작하기';
+    $('fine').hidden = false;
+  }
+
+  /* 이메일 저장 — 기본은 켜짐. 끈 사실만 따로 적어 둔다(택스팟과 같은 규칙) */
+  var KEY = 'alimtalk.로그인이메일', NO = 'alimtalk.로그인이메일.안함';
+  var store = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+                set: function (k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} } };
+  $('keep').checked = !store.get(NO);
+  var saved = store.get(KEY);
+  if (saved) $('email').value = saved;
+  (saved && !NEW ? $('pw') : $(FIELDS[0][0])).focus();
+
+  var q = new URLSearchParams(location.search);
+  function say(t, good) { var m = $('msg'); m.textContent = t; m.className = 'note' + (good ? ' good' : ''); m.hidden = !t; }
+  document.querySelectorAll('.lf input').forEach(function (i) { i.addEventListener('input', function () { say(''); }); });
+
+  /* 모양 맞추기 — 사업자등록번호 · 휴대폰 */
+  var digits = function (s) { return String(s).replace(/\D/g, ''); };
+  if (NEW) {
+    $('biz').addEventListener('input', function (e) { var d = digits(e.target.value).slice(0, 10); e.target.value = d.length > 5 ? d.slice(0,3)+'-'+d.slice(3,5)+'-'+d.slice(5) : d.length > 3 ? d.slice(0,3)+'-'+d.slice(3) : d; });
+    $('phone').addEventListener('input', function (e) { var d = digits(e.target.value).slice(0, 11); e.target.value = d.length > 7 ? d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7) : d.length > 3 ? d.slice(0,3)+'-'+d.slice(3) : d; });
+  }
+  function bizOk(s) { var d = digits(s); if (d.length !== 10) return false; var w = [1,3,7,1,3,7,1,3,5], sum = 0; for (var i = 0; i < 9; i++) sum += +d[i] * w[i]; sum += Math.floor(+d[8] * 5 / 10); return (10 - sum % 10) % 10 === +d[9]; }
+
+  $('find').onclick = function (e) { e.preventDefault(); say('데모에서는 찾기를 쓸 수 없습니다. 실서비스에서는 가입한 이메일로 재설정 링크를 보냅니다.', true); };
+  $('terms').onclick = function (e) { e.preventDefault(); say('이용약관 · 개인정보 처리방침 전문은 서비스를 열기 전에 넣습니다.', true); };
+
+  function remember(email) { if ($('keep').checked) { store.set(KEY, email); store.set(NO, null); } else { store.set(KEY, null); store.set(NO, '1'); } }
+
+  $('f').addEventListener('submit', async function (e) {
     e.preventDefault();
-    var email = document.getElementById('email').value.trim().toLowerCase(), pw = document.getElementById('pw').value;
-    msg.hidden = true;
-    if (!email || !pw) { msg.className = 'alert bad'; msg.textContent = '이메일과 비밀번호를 넣어 주세요.'; msg.hidden = false; return; }
-    var b = document.getElementById('go'); b.disabled = true; b.textContent = '확인 중…';
-    try { await AlimAuth.signIn(email, pw, document.getElementById('keep').checked); location.replace(next); }
-    catch (err) { msg.className = 'alert bad'; msg.textContent = err.message; msg.hidden = false; b.disabled = false; b.textContent = '로그인'; }
+    var email = $('email').value.trim().toLowerCase(), pw = $('pw').value, b = $('go'), label = b.textContent;
+    if (NEW) {
+      if (!$('office').value.trim()) return say('사무실 이름을 적어 주세요.');
+      if (!bizOk($('biz').value)) return say('사업자등록번호를 확인해 주세요.');
+      if (!$('name').value.trim()) return say('대표자 이름을 적어 주세요.');
+      if (!/^01[016789]\d{7,8}$/.test(digits($('phone').value))) return say('휴대폰 번호를 확인해 주세요.');
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return say('이메일을 확인해 주세요.');
+    if (!pw) return say('비밀번호를 입력하세요.');
+    if (NEW && pw.length < 6) return say('비밀번호는 6자 이상이어야 합니다.');
+    b.disabled = true; b.textContent = '처리 중…';
+    try {
+      if (NEW) await AlimAuth.signUp({ email: email, password: pw, name: $('name').value.trim(), office: $('office').value.trim(), bizNo: digits($('biz').value), phone: digits($('phone').value) });
+      await AlimAuth.signIn(email, pw, true);
+      remember(email);
+      location.replace('/' + next);
+    } catch (err) { say(err.message); b.disabled = false; b.textContent = label; }
   });
+  if (q.get('bye')) say('로그아웃했습니다.', true);
+})();
 </script>
 </body>
 </html>
