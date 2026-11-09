@@ -593,6 +593,19 @@ td.tnum{white-space:nowrap}
 .wtable tr.wrow{cursor:pointer}
 .modal.hmodal{max-width:900px;width:min(900px,calc(100vw - 32px));padding:28px}
 .modal.hmodal .wlist{max-height:min(560px,60vh)}
+.wtable tbody tr.won td{background:var(--brand-soft)!important}
+
+/* 발송명단 팝업 — 크기 고정, 명단만 스크롤 */
+.modal.hmodal{height:min(720px,90vh);max-height:none;overflow:hidden}
+.modal.hmodal .wlist{flex:1;min-height:0;max-height:none;overflow:auto}
+.hm-r{display:flex;align-items:center;gap:10px}
+.modal.hmodal .hbtns button,.modal.hmodal .hbtns>div{min-height:88px;padding:14px 16px;justify-content:space-between}
+.modal.hmodal .hbtns span{font-size:13px}
+.modal.hmodal .hbtns b{font-size:24px}
+.wmini td{height:34px!important;padding-top:0;padding-bottom:0}
+.wmini th{height:38px!important}
+.wmini{border-collapse:separate;border-spacing:0}
+.wlist thead th{position:sticky;top:0;z-index:1}
 </style>
 </head>
 <body>
@@ -1096,10 +1109,8 @@ function listModal(kind,id){
   const h=S.history.find(x=>x.id===id),isFail=l=>l.result==='실패',st=hst(h);
   const logs=h.logs.filter(l=>kind==='all'?true:kind==='fail'?isFail(l):!isFail(l));
   const box=(k,label,n,cls='')=>`<button data-hlist="${k}:${h.id}" class="${k===kind?'on':''} ${cls}" aria-pressed="${k===kind}"><span>${label}</span><b class="tnum">${n}</b></button>`;
-  modal(`<div class="hm-head"><h3>${h.no?`[${h.no}회] `:''}${esc(h.title)}</h3><button class="ib" data-close aria-label="닫기">${bi('x',18)}</button></div>
-    <div class="small muted">${h.date.replace(/-/g,'.')} ${H_TIME(h)} 발송</div>
+  modal(`<div class="hm-head"><h3>${h.no?`[${h.no}회] `:''}${esc(h.title)}</h3><span class="hm-r"><span class="small muted tnum">${h.date.replace(/-/g,'.')} ${H_TIME(h)} 발송</span><button class="ib" data-close aria-label="닫기">${bi('x',18)}</button></span></div>
     <div class="hsum hbtns">${box('all','전송건수',h.sent)}${box('ok','성공',st.ok)}${box('fail','실패',st.fail,st.fail?'bad':'')}<div><span>진행상황</span><b>${st.doing?'진행중':'완료'}</b></div></div>
-    ${h.fb&&kind!=='fail'?`<div class="small muted">성공 ${st.ok}건 중 ${h.fb}건은 카카오톡이 없어 문자로 대신 보냈어요.</div>`:''}
     <div class="small" style="font-weight:700;color:var(--ink)">${{all:'전체 명단',ok:'성공 명단',fail:'실패 명단'}[kind]} <span class="tnum muted">${logs.length}명</span></div>
     <div class="wtw wlist"><table class="wtable wmini"><thead><tr><th>이름</th><th>상호</th><th>휴대폰</th>${kind==='fail'?'<th>실패 사유</th>':''}</tr></thead>
       <tbody>${logs.map(l=>`<tr><td>${esc(l.name)}</td><td>${esc(l.biz)}</td><td class="tnum">${esc(l.phone)}</td>${kind==='fail'?`<td>${esc(l.why||'번호 확인 필요')}</td>`:''}</tr>`).join('')||`<tr><td colspan="${kind==='fail'?4:3}" class="wempty">${kind==='fail'?'실패한 고객이 없어요.':'명단이 없어요.'}</td></tr>`}</tbody></table></div>`);
