@@ -389,6 +389,26 @@ button.bk-opt{border:0;cursor:pointer;font:inherit;font-size:12px;font-weight:70
 .lsum{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:2px solid var(--ink);padding-top:14px;margin-top:4px}
 .lsum b{font-size:18px;color:var(--brand)}
 @media (max-width:640px){.lmodes{grid-template-columns:1fr}}
+
+.lwrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start;margin-bottom:16px}
+.lprev{position:sticky;top:12px}
+.lprev .phone{margin:0 auto}
+.lbody{border:1px solid var(--line);border-radius:6px;padding:12px;white-space:pre-line;font-size:13px;max-height:200px;overflow:auto}
+.lgfs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.lgf{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;font:inherit;font-size:13px;color:var(--ink);cursor:pointer}
+.lgf .tnum{color:var(--muted);font-size:12px;margin-left:2px}
+.lgf.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand);font-weight:700}
+.ltools{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.ltools .bk-srch{flex:1 1 220px;height:36px}
+.ltools .lnk{margin-left:auto;font-size:13px}
+.ltable{max-height:460px;overflow:auto;border:1px solid var(--line);border-radius:6px}
+.ltable table{min-width:620px}
+.ltable thead th{position:sticky;top:0;z-index:1}
+.nchip .small{color:var(--muted)}
+@media (max-width:1000px){.lwrap{grid-template-columns:1fr}.lprev{position:static}}
+.nchips{display:flex;gap:8px;flex-wrap:wrap}
+.nchip{display:flex;flex-direction:column;align-items:flex-start;gap:2px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);padding:8px 12px;cursor:pointer;font:inherit;color:var(--ink);text-align:left}
+.nchip.on{border-color:var(--brand);background:var(--brand-soft)}.nchip.on b{color:var(--brand)}
 </style>
 </head>
 <body>
@@ -448,7 +468,7 @@ const S={
     ['배준서','010-6650-2238','준서건설'],['임채원','010-3378-9012','채원스튜디오'],['신동하','010-5591-6623','동하물류']
   ].map((c,i)=>({id:i+1,name:c[0],phone:c[1],title:i===3?'약사님':i===5?'원장님':'대표님',biz:c[2],optout:i===8,gid:i<7?1:i<10?2:i===10?3:null})),
   groups:[{id:1,name:'기장고객',send:true},{id:2,name:'신고대리',send:true},{id:3,name:'해지예정',send:false}],
-  gfilter:'all', sel:new Set(), renaming:false, gq:'', gsort:'made', chanFlow:{}, lEdit:null, ld:null, csort:{k:null,dir:1}, page:1, editMode:false, nextGid:10, nextId:100,
+  gfilter:'all', sel:new Set(), renaming:false, gq:'', gsort:'made', chanFlow:{}, lSel:null, ld:null, csort:{k:null,dir:1}, page:1, editMode:false, nextGid:10, nextId:100,
   tSel:1,
   send:{tid:null,mode:'groups',gids:new Set([1,2]),picked:[],vars:{},when:'now',at:'',checked:false,armed:false},
   reserved:[], hView:'date', hOpen:null, hContact:null, hMsg:null, hq:'',
@@ -556,52 +576,59 @@ function listState(n){const k=recipientsOf(n).length,l=n.list;
   return {label:`명단 ${k}명`,tone:'good',k};}
 const openNotices=()=>S.notices.filter(n=>!noticeTimes(n).locked||new Date()<noticeTimes(n).at);
 const needList=()=>openNotices().filter(n=>!n.list&&!noticeTimes(n).locked).length;
-function startEdit(id){const n=S.notices.find(x=>x.id===id),l=n.list;
-  S.lEdit=id;S.ld={mode:l?.mode||'pick',gids:new Set(l?.gids||S.groups.filter(g=>g.send).map(g=>g.id)),ids:new Set(l?.ids||[]),q:''};S.view='lists';render();window.scrollTo(0,0);}
-const draftList=()=>({mode:S.ld.mode,gids:[...S.ld.gids],ids:[...S.ld.ids]});
+function startEdit(id){S.lSel=id;S.ld=null;S.view='lists';render();window.scrollTo(0,0);}
+/* 편집 중인 명단 — 저장된 명단이 없으면 '평소 발송 대상' 전원이 골라진 채로 시작 (그대로 두면 주소록 전체로 나가는 것과 같다) */
+function draftFor(n){const l=n.list;let ids;
+  if(!l||l.mode==='all')ids=S.contacts.filter(sendable).map(c=>c.id);
+  else if(l.mode==='none')ids=[];
+  else ids=recipientsOf(n,l).map(c=>c.id);
+  return {nid:n.id,ids:new Set(ids),q:'',gf:'all'};}
+const draftList=()=>({mode:'pick',gids:[],ids:[...S.ld.ids]});
 function vLists(){
-  if(S.lEdit)return vListEdit();
-  const open=openNotices(),past=S.notices.filter(n=>!open.includes(n));
-  const row=n=>{const t=noticeTimes(n),st=listState(n),tp=S.templates.find(x=>x.id===n.tid);return `<tr class="hov">
-    <td><b>${n.no}회 · ${esc(n.title)}</b><div class="small muted">${esc(tp?.name||'')} · ${esc(n.cat)}</div></td>
-    <td class="tnum nowrap">${fmtDT(t.at)}</td><td class="tnum nowrap">${t.locked?'<span class="muted">마감</span>':fmtDT(t.deadline)}</td>
-    <td>${tag(st.label,st.tone)}${n.list?.at?`<div class="small muted tnum" style="margin-top:2px">${esc(n.list.at)} 저장</div>`:''}</td>
-    <td class="r">${t.locked?'':`<button class="btn sm ${n.list?'':'primary'}" data-ledit="${n.id}">${n.list?'명단 고치기':'명단 만들기'}</button>`}</td></tr>`;};
-  return `<p class="lead">운영사가 새 알림톡을 올리면 대표님 카카오톡으로 알려 드려요. 마감까지 받을 사람을 골라 두시면 <b>그 명단으로만</b> 한 번에 나갑니다. 고르지 않으면 <b>주소록 전체</b>(수신거부 · 발송 제외 그룹 빼고)로 나가요.</p>
-  <section class="card"><div class="card-h"><h3>보낼 알림톡</h3><span class="sub">${open.length}개</span></div>
-    <div class="tw"><table><thead><tr><th>알림톡</th><th>발송</th><th>마감</th><th>받는 사람</th><th class="r"></th></tr></thead>
-    <tbody>${open.map(row).join('')||'<tr><td colspan="5" class="empty">지금은 보낼 알림톡이 없어요. 새 알림톡이 올라오면 카카오톡으로 알려 드립니다.</td></tr>'}</tbody></table></div></section>
+  const open=openNotices().sort((a,b)=>new Date(a.at)-new Date(b.at)),past=S.notices.filter(n=>!open.includes(n));
+  if(!open.length)return `<section class="card"><div class="empty">지금은 보낼 알림톡이 없어요. 새 알림톡이 올라오면 대표님 카카오톡으로 알려 드립니다.</div></section>`;
+  let n=open.find(x=>x.id===S.lSel)||open[0];S.lSel=n.id;
+  if(!S.ld||S.ld.nid!==n.id)S.ld=draftFor(n);
+  const d=S.ld,t=noticeTimes(n),tp=S.templates.find(x=>x.id===n.tid),st=listState(n);
+  const q=d.q.trim().replace(/-/g,''),inGF=c=>d.gf==='all'?true:d.gf==='none'?c.gid==null:c.gid===d.gf;
+  const rows=S.contacts.filter(c=>inGF(c)&&(!q||(c.name+c.phone.replace(/-/g,'')+c.biz+(c.title||'')).includes(q)));
+  const okRows=rows.filter(c=>!c.optout),allOn=okRows.length>0&&okRows.every(c=>d.ids.has(c.id));
+  const sel=S.contacts.filter(c=>d.ids.has(c.id)&&!c.optout);
+  const saved=new Set(recipientsOf(n).map(c=>c.id)),dirty=sel.length!==saved.size||sel.some(c=>!saved.has(c.id))||(!n.list);
+  const gcount=g=>{const cs=S.contacts.filter(c=>(g==='none'?c.gid==null:g==='all'?true:c.gid===g)&&!c.optout);return [cs.filter(c=>d.ids.has(c.id)).length,cs.length];};
+  const gchip=(g,name)=>{const [a,b]=gcount(g);return `<button class="lgf ${d.gf===g?'on':''}" data-lgf="${g}">${esc(name)} <span class="tnum">${a}/${b}</span></button>`;};
+  return `<div class="nchips" style="margin-bottom:14px">${open.map(x=>{const s=listState(x);return `<button class="nchip ${x===n?'on':''}" data-lsel="${x.id}"><b>${x.no}회 · ${esc(x.title)}</b><span class="small">${fmtDT(noticeTimes(x).at)} 발송 · ${esc(s.label)}</span></button>`;}).join('')}</div>
+  <div class="lwrap">
+    <section class="card lpick">
+      <div class="card-h"><h3>받을 사람 고르기</h3><span class="sub">${t.locked?'마감됐어요':`마감 ${fmtDT(t.deadline)}`}</span><span class="r">${tag(st.label,st.tone)}</span></div>
+      <div class="small muted" style="margin:-4px 0 12px">${n.list?`${esc(n.list.at)}에 저장한 명단이에요. 마감 전까지 고칠 수 있어요.`:'아직 저장한 명단이 없어 <b style="color:var(--ink)">평소 발송 대상 전원</b>이 골라져 있어요. 빼실 분만 체크를 풀고 저장하세요. 저장하지 않으면 이대로(주소록 전체) 나갑니다.'}</div>
+      <div class="lgfs">${gchip('all','전체')}${S.groups.map(g=>gchip(g.id,g.name)).join('')}${gchip('none','미지정')}</div>
+      <div class="ltools">
+        <label class="bk-srch"><input id="lq" placeholder="이름 · 휴대폰 · 상호 찾기" value="${esc(d.q)}" aria-label="고객 찾기">${bi('search',18)}</label>
+        <button class="btn sm" id="l-grp-on">${d.gf==='all'?'모두 고르기':'이 그룹 모두 고르기'}</button><button class="btn sm" id="l-grp-off">${d.gf==='all'?'모두 풀기':'이 그룹 모두 풀기'}</button>
+        <button class="lnk" id="l-last">지난번 명단 불러오기</button>
+      </div>
+      <div class="ltable bk-table"><table>
+        <colgroup><col style="width:48px"><col style="width:136px"><col><col style="width:76px"><col><col><col style="width:64px"></colgroup>
+        <thead><tr><th class="ck"><label class="cc" title="보이는 고객 모두"><input type="checkbox" id="lc-all" ${allOn?'checked':''} aria-label="보이는 고객 모두 고르기"><i>${bi('check',12)}</i></label></th><th>휴대폰번호</th><th>이름</th><th>직함</th><th>상호</th><th>그룹명</th><th>수신</th></tr></thead>
+        <tbody>${rows.map(c=>`<tr class="${c.optout?'off':''} ${d.ids.has(c.id)&&!c.optout?'picked':''}">
+          <td class="ck">${c.optout?'':`<label class="cc"><input type="checkbox" data-lc="${c.id}" ${d.ids.has(c.id)?'checked':''} aria-label="${esc(c.name)} 고르기"><i>${bi('check',12)}</i></label>`}</td>
+          <td class="tnum">${esc(c.phone)}</td><td class="el">${esc(c.name)}</td><td class="el">${esc(c.title||'')}</td><td class="el">${esc(c.biz)}</td>
+          <td class="el">${c.gid?esc(grp(c.gid)?.name):'<span class="muted">미지정</span>'}</td><td>${c.optout?'<span class="bk-opt">거부</span>':''}</td></tr>`).join('')
+          ||'<tr><td colspan="7" class="empty">찾는 고객이 없어요.</td></tr>'}</tbody></table></div>
+      <div class="lsum"><span>받는 사람 <b class="tnum">${sel.length}명</b> <span class="small muted">· 수신거부 고객은 고를 수 없어요</span></span>
+        <span class="hstack">${t.locked?'':`<button class="btn" id="l-none">이번엔 보내지 않기</button><button class="btn primary" id="l-save" ${dirty?'':'disabled'}>${dirty?'이 명단으로 저장':'저장됨'}</button>`}</span></div>
+    </section>
+    <aside class="lprev">
+      <section class="card"><div class="card-h"><h3>${n.no}회 · ${esc(n.title)}</h3></div>
+        <div class="small muted" style="margin:-4px 0 10px">${esc(tp?.name||'')} · ${fmtDT(t.at)} 발송</div>
+        ${phone(tp,sel[0]||S.contacts.find(sendable),n.vars||{},`카카오 승인 ${tp?.approvedAt||''} · 검수받은 그대로 나갑니다`)}
+        ${n.body?`<div class="small muted" style="margin:12px 0 6px">버튼을 누르면 열리는 내용</div><div class="lbody">${esc(n.body)}</div>`:''}
+      </section>
+    </aside>
+  </div>
   ${past.length?`<section class="card"><div class="card-h"><h3>지난 알림톡</h3></div><div class="tw"><table><thead><tr><th>알림톡</th><th>발송</th><th>받는 사람</th></tr></thead>
-    <tbody>${past.map(n=>`<tr><td>${n.no}회 · ${esc(n.title)}</td><td class="tnum">${fmtDT(noticeTimes(n).at)}</td><td>${tag(listState(n).label)}</td></tr>`).join('')}</tbody></table></div></section>`:''}`;
-}
-function vListEdit(){
-  const n=S.notices.find(x=>x.id===S.lEdit),t=noticeTimes(n),d=S.ld,tp=S.templates.find(x=>x.id===n.tid);
-  const rec=recipientsOf(n,draftList()),cnt=f=>S.contacts.filter(f).length;
-  const inG=c=>d.gids.has(c.gid==null?'none':c.gid);
-  const q=d.q.trim().replace(/-/g,'');
-  const cand=q?S.contacts.filter(c=>!inG(c)&&(c.name+c.phone.replace(/-/g,'')+c.biz).includes(q)).slice(0,8):[];
-  const picked=S.contacts.filter(c=>d.ids.has(c.id)&&!inG(c));
-  const gbox=(id,name,send)=>{const k=cnt(c=>(id==='none'?c.gid==null:c.gid===id)&&!c.optout);return `<label class="lgc ${d.gids.has(id)?'on':''}"><input type="checkbox" data-lg="${id}" ${d.gids.has(id)?'checked':''}><span><b>${esc(name)}</b> <span class="tnum muted">${k}명</span>${send===false?' <span class="bk-off">평소 발송 제외</span>':''}</span></label>`;};
-  return `<div class="hstack" style="margin-bottom:12px"><button class="btn sm" data-lback>‹ 발송명단</button><span class="small muted">${t.locked?'마감됐어요':`마감 <b style="color:var(--ink)">${fmtDT(t.deadline)}</b> · 발송 ${fmtDT(t.at)}`}</span></div>
-  <div class="cols">
-    <section class="card"><div class="card-h"><h3>${n.no}회 · ${esc(n.title)} — 받을 사람</h3></div>
-      <div class="lmodes">${[['all','주소록 전체',`수신거부 · 발송 제외 그룹 빼고 ${cnt(sendable)}명`],['pick','고른 사람만','그룹이나 한 명씩 골라요'],['none','이번엔 보내지 않기','이 알림톡은 고객님께 안 나가요']].map(([k,l,s])=>`<button class="lmode ${d.mode===k?'on':''}" data-lmode="${k}" aria-pressed="${d.mode===k}"><b>${l}</b><span class="small muted">${s}</span></button>`).join('')}</div>
-      ${d.mode==='pick'?`
-      <div class="lsec"><div class="lsec-h"><b>그룹으로 고르기</b><button class="lnk" id="l-last">지난번 명단 불러오기</button></div>
-        <div class="lgrid">${S.groups.map(g=>gbox(g.id,g.name,g.send)).join('')}${gbox('none','미지정')}</div></div>
-      <div class="lsec"><div class="lsec-h"><b>한 명씩 더하기</b><span class="small muted">고른 그룹에 없는 고객</span></div>
-        <label class="bk-srch"><input id="lq" placeholder="이름 · 휴대폰 · 상호로 찾기" value="${esc(d.q)}" aria-label="고객 찾기">${bi('search',18)}</label>
-        ${cand.length?`<div class="lcand">${cand.map(c=>`<label class="chk"><input type="checkbox" data-lc="${c.id}" ${d.ids.has(c.id)?'checked':''}> ${esc(c.name)} <span class="small muted tnum">${esc(c.phone)} · ${esc(c.biz)}</span>${c.optout?' <span class="bk-opt">거부</span>':''}</label>`).join('')}</div>`:q?'<div class="small muted" style="margin-top:6px">찾는 고객이 없거나 이미 고른 그룹에 들어 있어요.</div>':''}
-        ${picked.length?`<div class="lchips">${picked.map(c=>`<span class="lchip">${esc(c.name)}<button data-lrm="${c.id}" aria-label="${esc(c.name)} 빼기">×</button></span>`).join('')}</div>`:''}
-      </div>`:''}
-      <div class="lsum"><span>받는 사람 <b class="tnum">${rec.length}명</b>${d.mode!=='none'?` <span class="small muted">· 수신거부 고객은 저절로 빠져요</span>`:''}</span>
-        <span class="hstack"><button class="btn" data-lback>취소</button><button class="btn primary" id="l-save" ${t.locked?'disabled':''}>이 명단으로 저장</button></span></div>
-    </section>
-    <section class="card"><div class="card-h"><h3>고객님께 이렇게 도착해요</h3></div>
-      ${phone(tp,rec[0]||S.contacts.find(sendable),n.vars||{},`카카오 승인 ${tp?.approvedAt||''} · 검수받은 그대로 나갑니다`)}
-      ${n.body?`<div class="small muted" style="margin:12px 0 6px">버튼을 누르면 열리는 내용</div><div style="border:1px solid var(--line);border-radius:6px;padding:12px;white-space:pre-line;font-size:13px">${esc(n.body)}</div>`:''}
-    </section>
-  </div>`;
+    <tbody>${past.map(x=>`<tr><td>${x.no}회 · ${esc(x.title)}</td><td class="tnum">${fmtDT(noticeTimes(x).at)}</td><td>${tag(listState(x).label)}</td></tr>`).join('')}</tbody></table></div></section>`:''}`;
 }
 
 function vHome(){
@@ -1092,10 +1119,9 @@ const filteredRows=()=>bookRows();
 document.addEventListener('click',e=>{
   const t=e.target.closest('button,[data-close],[data-hmsg]');if(!t)return;const d=t.dataset;
   if(d.ledit)return startEdit(+d.ledit);
-  if('lback' in d){S.lEdit=null;S.view='lists';return render();}
-  if(d.lmode){S.ld.mode=d.lmode;return render();}
-  if(d.lrm){S.ld.ids.delete(+d.lrm);return render();}
-  if(d.go){if(d.go==='lists')S.lEdit=null;return go(d.go,d.tabgo);}
+  if(d.lsel){S.lSel=+d.lsel;S.ld=null;return render();}
+  if(d.lgf){S.ld.gf=d.lgf==='all'||d.lgf==='none'?d.lgf:+d.lgf;return render();}
+  if(d.go)return go(d.go,d.tabgo);
   if(d.tab){S.tab=d.tab;return render();}
   if('close' in d)return closeModal();
   if(d.hview){S.hView=d.hview;return render();}
@@ -1138,11 +1164,14 @@ document.addEventListener('click',e=>{
     case 'ch-connect':{const c=document.getElementById('ch-code').value.replace(/\D/g,'');if(c.length!==6)return toast('인증번호 6자리를 넣어 주세요.');
       S.office.channel=S.chanFlow.id;S.chanStatus='확인 중';S.chanDate=new Date().toISOString().slice(0,10);S.chanFlow={};
       toast('연결을 요청했습니다. 운영사가 알림톡 그룹에 넣으면 문자로 알려 드려요.');render();break;}
-    case 'l-save':{const n=S.notices.find(x=>x.id===S.lEdit),l=draftList();if(l.mode==='pick'&&!recipientsOf(n,l).length)return toast('받을 사람을 한 명 이상 골라 주세요.');
+    case 'l-save':{const n=S.notices.find(x=>x.id===S.lSel),l=draftList();if(!recipientsOf(n,l).length)return toast('받을 사람을 한 명 이상 골라 주세요. 안 보내시려면 「이번엔 보내지 않기」를 누르세요.');
       const d=new Date();n.list={...l,at:`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`};
-      toast(l.mode==='none'?'이번 알림톡은 보내지 않기로 저장했습니다.':`${recipientsOf(n).length}명 명단을 저장했습니다. 마감 전까지 고칠 수 있어요.`);S.lEdit=null;render();break;}
-    case 'l-last':{const prev=S.notices.filter(x=>x.id!==S.lEdit&&x.list?.mode==='pick').sort((a,b)=>b.no-a.no)[0];if(!prev)return toast('불러올 지난 명단이 없어요.');
-      S.ld.gids=new Set(prev.list.gids);S.ld.ids=new Set(prev.list.ids);toast(`${prev.no}회 명단을 불러왔습니다.`);render();break;}
+      toast(`${recipientsOf(n).length}명 명단을 저장했습니다. 마감 전까지 고칠 수 있어요.`);render();break;}
+    case 'l-none':{const n=S.notices.find(x=>x.id===S.lSel),d=new Date();n.list={mode:'none',gids:[],ids:[],at:`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`};
+      S.ld=draftFor(n);toast('이번 알림톡은 보내지 않기로 저장했습니다.');render();break;}
+    case 'l-last':{const prev=S.notices.filter(x=>x.id!==S.lSel&&x.list?.mode==='pick').sort((a,b)=>b.no-a.no)[0];if(!prev)return toast('불러올 지난 명단이 없어요.');
+      S.ld.ids=new Set(recipientsOf(prev).map(c=>c.id));toast(`${prev.no}회 명단을 불러왔습니다. 저장해야 반영돼요.`);render();break;}
+    case 'l-grp-on':case 'l-grp-off':{const on=t.id==='l-grp-on',gf=S.ld.gf;S.contacts.filter(c=>!c.optout&&(gf==='all'||(gf==='none'?c.gid==null:c.gid===gf))).forEach(c=>on?S.ld.ids.add(c.id):S.ld.ids.delete(c.id));render();break;}
     case 'open-upload':uploadModal();break;
     case 'edit-mode':S.editMode=!S.editMode;if(!S.editMode)S.editing=null;render();break;
     case 'bulk-move-open':moveModal();break;
@@ -1196,7 +1225,7 @@ document.addEventListener('input',e=>{
 });
 document.addEventListener('change',e=>{
   const id=e.target.id;
-  if(e.target.dataset.lg){const k=e.target.dataset.lg==='none'?'none':+e.target.dataset.lg;e.target.checked?S.ld.gids.add(k):S.ld.gids.delete(k);return render();}
+  if(e.target.id==='lc-all'){const d=S.ld,q=d.q.trim().replace(/-/g,'');S.contacts.filter(c=>!c.optout&&(d.gf==='all'||(d.gf==='none'?c.gid==null:c.gid===d.gf))&&(!q||(c.name+c.phone.replace(/-/g,'')+c.biz+(c.title||'')).includes(q))).forEach(c=>e.target.checked?d.ids.add(c.id):d.ids.delete(c.id));return render();}
   if(e.target.dataset.lc){const k=+e.target.dataset.lc;e.target.checked?S.ld.ids.add(k):S.ld.ids.delete(k);return render();}
   if(e.target.dataset.mute){const c=e.target.dataset.mute,m=new Set(S.office.muted||[]);e.target.checked?m.add(c):m.delete(c);S.office.muted=[...m];
     toast(e.target.checked?`'${c}' 안내는 앞으로 보내지 않습니다.`:`'${c}' 안내를 다시 보냅니다.`);return render();}
