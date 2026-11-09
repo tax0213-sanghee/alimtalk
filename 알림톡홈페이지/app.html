@@ -217,6 +217,15 @@ input[type="checkbox"],input[type="radio"]{width:16px;height:16px;accent-color:v
 .tier.on .p{color:var(--brand)}
 
 .drop{border:1.5px dashed var(--line);border-radius:6px;padding:18px;text-align:center;color:var(--muted);cursor:pointer}
+.modal.wide{max-width:640px}
+.mapbox{border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:10px;background:#F7F7F9}
+.mapgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mapgrid .sel{width:100%;min-width:0}
+table.mini{width:100%;border-collapse:collapse;font-size:12px;background:#fff;border-radius:6px;overflow:hidden}
+table.mini th,table.mini td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
+table.mini th{color:var(--muted);font-weight:600}
+table.mini td.badv{color:#B3352A}
+@media (max-width:640px){.mapgrid{grid-template-columns:1fr 1fr}}
 .drop.over{border-color:var(--brand);background:var(--brand-soft)}
 .layer{position:fixed;inset:0;background:rgb(24 24 29/.4);display:grid;place-items:center;z-index:50;padding:16px}
 .modal{background:var(--card);border-radius:12px;max-width:480px;width:100%;padding:20px;display:flex;flex-direction:column;gap:14px;max-height:90vh;overflow:auto;box-shadow:0 6px 20px rgb(79 83 214/.10)}
@@ -614,42 +623,130 @@ function cardModal(){
 }
 function uploadModal(){
   modal(`<h3>주소록 불러오기</h3>
-  <p class="small muted" style="margin:0">엑셀(xlsx · xls · csv) 첫 줄에 <code>고객명</code> <code>휴대폰</code> <code>상호</code> <code>그룹명</code> 순서로 있으면 됩니다. 없는 그룹 이름은 새로 만들어집니다.</p>
-  <div class="drop" id="drop" tabindex="0"><span id="drop-t">파일을 끌어다 놓거나 눌러서 고르기</span><input type="file" id="file" accept=".xlsx,.xls,.csv" hidden></div>
-  <div class="fl"><label for="paste">또는 붙여넣기</label><textarea id="paste" class="inp" placeholder="강민지, 010-1234-5678, 민지카페, 기장고객"></textarea></div>
-  <div class="fgrid"><div class="fl"><label for="up-g">그룹명이 없는 번호는</label><select id="up-g" class="sel">${groupOptions(typeof S.gfilter==='number'?S.gfilter:null)}</select></div>
+  <p class="small muted" style="margin:0">세무사랑 · 더존 · 위하고에서 내려받은 거래처 엑셀을 <b>그대로</b> 올려도 됩니다. 이름 · 휴대폰 칸을 알아서 찾고, 틀리면 아래에서 고칠 수 있어요.</p>
+  <div class="drop" id="drop" tabindex="0"><span id="drop-t">파일을 끌어다 놓거나 눌러서 고르기 (xlsx · xls · csv)</span><input type="file" id="file" accept=".xlsx,.xls,.csv,.txt" hidden></div>
+  <div class="fl"><label for="paste">또는 엑셀에서 복사해 붙여넣기</label><textarea id="paste" class="inp" placeholder="강민지&#9;010-1234-5678&#9;민지카페&#9;기장고객"></textarea></div>
+  <div id="up-map"></div>
+  <div class="fgrid"><div class="fl"><label for="up-g">그룹이 비어 있는 고객은</label><select id="up-g" class="sel">${groupOptions(typeof S.gfilter==='number'?S.gfilter:null)}</select></div>
   <div class="fl"><label for="mode">반영 방식</label><select id="mode" class="sel"><option value="merge">추가 · 갱신</option><option value="replace">전체 교체</option></select></div></div>
   <div id="up-result"></div>
   <div class="hstack" style="justify-content:flex-end"><button class="btn" data-close>닫기</button><button class="btn" id="up-check">미리 확인</button><button class="btn primary" id="up-apply" disabled>반영</button></div>`);
+  document.querySelector('#layer .modal').classList.add('wide');
+  imp={rows:[],head:-1,map:{}};pending=null;
   const drop=document.getElementById('drop'),file=document.getElementById('file');
   drop.onclick=()=>file.click();drop.onkeydown=e=>{if(e.key==='Enter')file.click();};
   drop.ondragover=e=>{e.preventDefault();drop.classList.add('over');};drop.ondragleave=()=>drop.classList.remove('over');
   drop.ondrop=e=>{e.preventDefault();drop.classList.remove('over');if(e.dataTransfer.files[0])readFile(e.dataTransfer.files[0]);};
   file.onchange=()=>{if(file.files[0])readFile(file.files[0]);};
+  document.getElementById('paste').oninput=e=>{document.getElementById('drop-t').textContent='파일을 끌어다 놓거나 눌러서 고르기 (xlsx · xls · csv)';
+    setRows(e.target.value.split(/\r?\n/).map(l=>l.split(/\t|,/)),false);};
 }
-let pending=null;
+
+/* ── 엑셀 칸 알아보기 — 세무사랑 · 더존 · 위하고 거래처 엑셀처럼 제목 줄이 몇 줄 아래에 있거나 칸 이름이 달라도 찾는다 ── */
+let pending=null,imp={rows:[],head:-1,map:{}};
+const FIELD={
+  name:{label:'이름',must:true,keys:[/^대표자(명|성명)?$/,/^(고객|거래처)?(성명|이름|고객명)$/,/대표자/,/성명|이름|고객명|담당자/]},
+  phone:{label:'휴대폰',must:true,keys:[/^(휴대폰|핸드폰|휴대전화|이동전화|휴대폰번호|핸드폰번호|hp|h\.p|mobile)$/i,/휴대|핸드폰|이동전화|^hp|모바일/i,/연락처|전화/]},
+  biz:{label:'상호',keys:[/^(상호|상호명|거래처명|업체명|회사명|사업장명)$/,/상호|거래처명|업체|회사|사업장명/]},
+  group:{label:'그룹',keys:[/^(그룹|그룹명|구분|분류)$/,/그룹|구분|분류|담당자/]}
+};
+const cell=v=>String(v??'').replace(/\s+/g,' ').trim();
+const looksPhone=v=>/^01[016789]\d{7,8}$/.test(String(v).replace(/\D/g,'').replace(/^82(?=10)/,'0'));
+function pickPhone(v){ /* 한 칸에 번호가 여러 개면 휴대폰 번호만 */
+  const s=String(v??'');const m=s.match(/(?:\+?82[-\s]?)?0?1[016789][-\s.)]?\d{3,4}[-\s.]?\d{4}/g)||[];
+  for(const x of m){let d=x.replace(/\D/g,'').replace(/^82/,'0');if(!d.startsWith('0'))d='0'+d;const p=normPhone(d);if(p)return p;}
+  return normPhone(s);
+}
+function guessMap(rows){
+  const W=Math.max(0,...rows.slice(0,200).map(r=>r.length));
+  /* 제목 줄: 첫 30줄 중 칸 이름이 가장 많이 맞는 줄 */
+  let head=-1,best=0;
+  rows.slice(0,30).forEach((r,i)=>{let n=0;r.forEach(c=>{c=cell(c);if(c&&c.length<15&&Object.values(FIELD).some(f=>f.keys.some(k=>k.test(c))))n++;});if(n>best){best=n;head=i;}});
+  if(best<1)head=-1;
+  const body=rows.slice(head+1).filter(r=>r.some(c=>cell(c)));
+  const hits=j=>body.slice(0,300).filter(r=>looksPhone(r[j])||!!pickPhone(r[j])).length;
+  const map={},used=new Set();
+  if(head>=0){
+    for(const [k,f] of Object.entries(FIELD)){
+      outer:for(const re of f.keys){
+        const cand=[];rows[head].forEach((c,j)=>{if(!used.has(j)&&re.test(cell(c)))cand.push(j);});
+        if(!cand.length)continue;
+        const j=k==='phone'?cand.sort((a,b)=>hits(b)-hits(a))[0]:cand[0];
+        if(k==='phone'&&!hits(j))continue;
+        map[k]=j;used.add(j);break outer;
+      }
+    }
+  }
+  /* 칸 이름으로 못 찾으면 내용으로: 휴대폰처럼 생긴 값이 가장 많은 칸 */
+  if(map.phone==null){let bj=-1,bh=0;for(let j=0;j<W;j++){if(used.has(j))continue;const h=hits(j);if(h>bh){bh=h;bj=j;}}if(bj>=0){map.phone=bj;used.add(bj);}}
+  if(map.name==null){for(let j=0;j<W;j++){if(used.has(j))continue;const v=body.slice(0,50).map(r=>cell(r[j])).filter(Boolean);
+    if(v.length&&v.filter(x=>/^[가-힣]{2,5}$/.test(x)).length>=v.length*.6){map.name=j;used.add(j);break;}}}
+  return {head,map};
+}
+function setRows(rows,fromFile){
+  rows=rows.map(r=>(r||[]).map(cell));
+  while(rows.length&&!rows[rows.length-1].some(Boolean))rows.pop();
+  const g=guessMap(rows);imp={rows,head:g.head,map:g.map};
+  if(fromFile)document.getElementById('paste').value='';
+  drawMap();check();
+}
+function drawMap(){
+  const el=document.getElementById('up-map');if(!imp.rows.length){el.innerHTML='';return;}
+  const W=Math.max(...imp.rows.map(r=>r.length));
+  const title=j=>imp.head>=0&&imp.rows[imp.head][j]?imp.rows[imp.head][j]:`${String.fromCharCode(65+(j%26))}열`;
+  const sample=j=>{const r=imp.rows.slice(imp.head+1).find(r=>cell(r[j]));return r?cell(r[j]).slice(0,14):'';};
+  const opts=k=>`<option value="">${FIELD[k].must?'고르세요':'없음'}</option>`+Array.from({length:W},(_,j)=>`<option value="${j}" ${imp.map[k]===j?'selected':''}>${esc(title(j))}${sample(j)?' · '+esc(sample(j)):''}</option>`).join('');
+  const body=imp.rows.slice(imp.head+1).filter(r=>r.some(Boolean)).slice(0,3);
+  el.innerHTML=`<div class="mapbox">
+    <div class="small"><b>이렇게 읽었어요</b> <span class="muted">${imp.head>=0?`${imp.head+1}번째 줄을 칸 이름으로 봤어요`:'칸 이름 줄이 없어 내용으로 찾았어요'}</span></div>
+    <div class="mapgrid">${Object.entries(FIELD).map(([k,f])=>`<div class="fl"><label for="map-${k}">${f.label}${f.must?' <span style="color:var(--bad,#B3352A)">*</span>':''}</label><select id="map-${k}" class="sel" data-map="${k}">${opts(k)}</select></div>`).join('')}</div>
+    ${body.length?`<table class="mini"><thead><tr>${Object.values(FIELD).map(f=>`<th>${f.label}</th>`).join('')}</tr></thead><tbody>${body.map(r=>`<tr>${Object.keys(FIELD).map(k=>{const v=imp.map[k]==null?'':r[imp.map[k]];const x=k==='phone'?(pickPhone(v)||v):v;return `<td${k==='phone'&&v&&!pickPhone(v)?' class="badv"':''}>${esc(x||'—')}</td>`;}).join('')}</tr>`).join('')}</tbody></table>`:''}
+  </div>`;
+  el.querySelectorAll('[data-map]').forEach(s=>s.onchange=()=>{const k=s.dataset.map,v=s.value===''?null:+s.value;
+    for(const o in imp.map)if(o!==k&&imp.map[o]===v&&v!=null)delete imp.map[o];
+    if(v==null)delete imp.map[k];else imp.map[k]=v;drawMap();check();});
+}
 function readFile(f){
   const r=new FileReader();
-  r.onload=e=>{try{let rows;
-    if(/\.csv$/i.test(f.name))rows=new TextDecoder('utf-8').decode(e.target.result).split(/\r?\n/).map(l=>l.split(','));
-    else{const wb=XLSX.read(e.target.result,{type:'array'});rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});}
-    document.getElementById('paste').value=rows.map(r=>r.slice(0,4).map(v=>v??'').join(', ')).join('\n');
-    document.getElementById('drop-t').textContent=f.name+' 읽음';check();
-  }catch(err){toast('파일을 읽지 못했습니다. 첫 시트에 고객명 · 휴대폰 칸이 있는지 확인해 주세요.');}};
+  r.onload=e=>{try{let rows;const buf=new Uint8Array(e.target.result);
+    if(/\.(csv|txt)$/i.test(f.name)){
+      /* 세무사랑 · 더존 CSV 는 대개 EUC-KR — 글자가 깨지면 그걸로 다시 읽는다 */
+      let t=new TextDecoder('utf-8').decode(buf);if(t.includes('\uFFFD'))t=new TextDecoder('euc-kr').decode(buf);
+      const wb=XLSX.read(t.replace(/^﻿/,''),{type:'string',raw:true});rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:false,defval:''});
+    }else{
+      const wb=XLSX.read(buf,{type:'array'});
+      /* 시트가 여러 개면 휴대폰 번호가 가장 많은 시트 */
+      let best=null,bn=-1;wb.SheetNames.forEach(n=>{const rs=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:false,defval:''});
+        const c=rs.reduce((a,r)=>a+(r.some(v=>pickPhone(v))?1:0),0);if(c>bn){bn=c;best=rs;}});
+      rows=best||[];
+    }
+    document.getElementById('drop-t').textContent=f.name+' 읽음 · '+Math.max(0,rows.length)+'줄';
+    setRows(rows,true);
+  }catch(err){toast('파일을 읽지 못했습니다. 암호가 걸린 엑셀이면 암호를 풀고 다시 저장해 주세요.');}};
   r.readAsArrayBuffer(f);
 }
 function check(){
-  const lines=document.getElementById('paste').value.split('\n').map(l=>l.split(/[,\t]/).map(s=>s.trim())).filter(r=>r.join('')!=='');
-  const add=[],upd=[],bad=[];
-  lines.forEach((r,i)=>{if(i===0&&/이름|고객/.test(r[0]))return;const ph=normPhone(r[1]);if(!r[0]||!ph){bad.push(r.join(' / '));return;}
-    (S.contacts.find(c=>c.phone===ph)?upd:add).push({name:r[0],phone:ph,biz:r[2]||'',gname:r[3]||''});});
+  const M=imp.map,res=document.getElementById('up-result'),btn=document.getElementById('up-apply');
+  if(!imp.rows.length){res.innerHTML='';btn.disabled=true;pending=null;return;}
+  if(M.name==null||M.phone==null){res.innerHTML=`<p class="small" style="margin:0;color:var(--warn-ink,#7A5606)">${M.name==null?'이름':'휴대폰'} 칸을 위에서 골라 주세요.</p>`;btn.disabled=true;pending=null;return;}
+  const add=[],upd=[],bad=[],seen=new Set();let dup=0,nophone=0;
+  imp.rows.slice(imp.head+1).forEach(r=>{
+    if(!r.some(Boolean))return;
+    const name=cell(r[M.name]),raw=cell(r[M.phone]),ph=pickPhone(raw);
+    if(/^(합계|소계|계|총계)$/.test(name))return;
+    if(!raw){nophone++;return;}
+    if(!name||!ph){bad.push([name,raw].filter(Boolean).join(' / '));return;}
+    if(seen.has(ph)){dup++;return;}seen.add(ph);
+    (S.contacts.find(c=>c.phone===ph)?upd:add).push({name,phone:ph,biz:M.biz!=null?cell(r[M.biz]):'',gname:M.group!=null?cell(r[M.group]):''});
+  });
   const upg=document.getElementById('up-g').value;
   const newG=[...new Set([...add,...upd].map(x=>x.gname).filter(n=>n&&!S.groups.some(g=>g.name===n)))];
   pending={add,upd,mode:document.getElementById('mode').value,defGid:upg?+upg:null};
   const removed=pending.mode==='replace'?S.contacts.filter(c=>!upd.some(u=>u.phone===c.phone)).length:0;
-  document.getElementById('up-result').innerHTML=`<div class="hstack">${tag('새로 추가 '+add.length,'good')}${tag('정보 수정 '+upd.length,'warn')}${pending.mode==='replace'?tag('명단에서 빠짐 '+removed,'bad'):''}${bad.length?tag('확인 필요 '+bad.length,'bad'):''}${newG.length?tag('새 그룹 '+newG.join(', ')):''}</div>
-    ${bad.length?`<p class="small muted" style="margin:6px 0 0">번호 형식이 맞지 않는 줄: ${bad.slice(0,3).map(esc).join(' · ')}${bad.length>3?' 외':''}</p>`:''}`;
-  document.getElementById('up-apply').disabled=!(add.length||upd.length);
+  res.innerHTML=`<div class="hstack" style="flex-wrap:wrap">${tag('새로 추가 '+add.length,'good')}${tag('정보 수정 '+upd.length,'warn')}${pending.mode==='replace'?tag('명단에서 빠짐 '+removed,'bad'):''}${bad.length?tag('번호 확인 '+bad.length,'bad'):''}${dup?tag('같은 번호 겹침 '+dup):''}${nophone?tag('휴대폰 없음 '+nophone):''}${newG.length?tag('새 그룹 '+newG.slice(0,4).join(', ')+(newG.length>4?' 외':'')):''}</div>
+    ${bad.length?`<p class="small muted" style="margin:6px 0 0">휴대폰 번호로 보기 어려운 줄: ${bad.slice(0,3).map(esc).join(' · ')}${bad.length>3?' 외':''}</p>`:''}
+    ${nophone||dup?`<p class="small muted" style="margin:6px 0 0">휴대폰이 비어 있거나 겹치는 줄은 빼고 넣어요.</p>`:''}`;
+  btn.disabled=!(add.length||upd.length);
 }
 function apply(){
   if(!pending)return;
@@ -738,7 +835,7 @@ document.addEventListener('change',e=>{
   if(e.target.dataset.sg!==undefined){const k=e.target.dataset.sg==='none'?'none':+e.target.dataset.sg;e.target.checked?S.send.gids.add(k):S.send.gids.delete(k);S.send.checked=false;S.send.armed=false;return render();}
   if(e.target.name==='when'){S.send.when=e.target.value;S.send.checked=false;S.send.armed=false;return render();}
   if(id==='s-at'){S.send.at=e.target.value;S.send.checked=false;S.send.armed=false;return render();}
-  if(id==='mode'){document.getElementById('up-result').innerHTML='';document.getElementById('up-apply').disabled=true;pending=null;}
+  if(id==='mode'||id==='up-g'){if(imp.rows.length)check();}
 });
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset?.hmsg){S.hMsg=+e.target.dataset.hmsg;render();}});
 
