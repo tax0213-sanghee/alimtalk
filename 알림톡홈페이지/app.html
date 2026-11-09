@@ -584,6 +584,10 @@ td.tnum{white-space:nowrap}
 @media (max-width:1000px){.wlay{grid-template-columns:1fr}.wright{position:static}}
 .modal .gtabs{align-self:flex-start}
 .hbtns button span,.hsum span{white-space:nowrap;font-size:11.5px}
+.hbtns button.on{border-color:var(--brand);background:var(--brand-soft)}
+.hbtns button.on span{color:var(--brand)}
+.wlist{max-height:420px;overflow:auto}
+.wlist thead th{position:sticky;top:0}
 </style>
 </head>
 <body>
@@ -1049,7 +1053,7 @@ const H_TIME=h=>h.time||(h.no?'10:00':'14:20');
 const H_TYPE=h=>{const t=h.no?S.templates.find(x=>x.weekly):S.templates.find(x=>x.name===h.title);return t?.image?'알림톡 이미지':'알림톡 텍스트';};
 const H_PAGE=10;
 function hRows(){const f=S.hf;const q=f.q.trim();
-  return [...S.history].filter(h=>h.date>=f.from&&h.date<=f.to&&(!f.type||H_TYPE(h)===f.type)&&(!q||h.title.includes(q)))
+  return [...S.history].filter(h=>h.date>=f.from&&h.date<=f.to&&(!q||h.title.includes(q)))
     .sort((a,b)=>(b.date+H_TIME(b)).localeCompare(a.date+H_TIME(a)));}
 function histByDate(){
   const f=S.hf,all=hRows(),pages=Math.max(1,Math.ceil(all.length/H_PAGE));if(f.page>pages)f.page=pages;
@@ -1061,17 +1065,16 @@ function histByDate(){
   return `<div class="wfilters">
       <label class="wdate">${CAL}<input type="date" id="hf-from" value="${esc(f.from)}" aria-label="시작일"></label><span class="muted">~</span>
       <label class="wdate">${CAL}<input type="date" id="hf-to" value="${esc(f.to)}" aria-label="끝날"></label>
-      <select id="hf-type" class="wsel" aria-label="메시지 타입"><option value="">메시지타입</option>${['알림톡 텍스트','알림톡 이미지'].map(t=>`<option ${f.type===t?'selected':''}>${t}</option>`).join('')}</select>
       <label class="wsrch"><input id="hf-q" placeholder="제목 또는 내용 입력" value="${esc(f.q)}" aria-label="제목 찾기">${bi('search',18)}</label>
     </div>
     <div class="wlay"><div class="wleft"><div class="wtw"><table class="wtable">
-      <colgroup><col style="width:138px"><col><col style="width:96px"><col style="width:62px"><col style="width:48px"><col style="width:48px"><col style="width:48px"><col style="width:68px"></colgroup>
-      <thead><tr><th>전송일자</th><th>제목</th><th>메시지 타입</th><th>전송건수</th><th>성공</th><th>실패</th><th>대기</th><th>진행상황</th></tr></thead>
+      <colgroup><col style="width:138px"><col><col style="width:62px"><col style="width:48px"><col style="width:48px"><col style="width:48px"><col style="width:68px"></colgroup>
+      <thead><tr><th>전송일자</th><th>제목</th><th>전송건수</th><th>성공</th><th>실패</th><th>대기</th><th>진행상황</th></tr></thead>
       <tbody>${rows.map(h=>{const st=hst(h),wait=h.logs.filter(l=>!l.result||l.result==='대기'||l.result==='발송 중').length;return `<tr class="${h.id===sel?.id?'won':''}">
         <td class="tnum">${h.date.replace(/-/g,'.')} ${H_TIME(h)}</td>
         <td class="wt"><button class="wlink" data-hsel="${h.id}" title="${esc(h.title)}">${h.no?`[${h.no}회]`:'[직접]'}${esc(h.title)}</button></td>
-        <td>${H_TYPE(h)}</td><td class="tnum">${h.sent}</td><td class="tnum">${st.ok}</td><td class="tnum">${st.fail}</td><td class="tnum">${wait}</td>
-        <td><span class="wst ${st.doing?'ing':''}">${st.doing?'진행중':'완료'}</span></td></tr>`;}).join('')||'<tr><td colspan="8" class="wempty">데이터가 없습니다.</td></tr>'}</tbody></table></div>
+        <td class="tnum">${h.sent}</td><td class="tnum">${st.ok}</td><td class="tnum">${st.fail}</td><td class="tnum">${wait}</td>
+        <td><span class="wst ${st.doing?'ing':''}">${st.doing?'진행중':'완료'}</span></td></tr>`;}).join('')||'<tr><td colspan="7" class="wempty">데이터가 없습니다.</td></tr>'}</tbody></table></div>
     <div class="wfoot"><button class="wbtn" id="hf-xls">엑셀다운로드</button></div>
     ${pages>1?`<nav class="pager" aria-label="쪽 넘기기"><button data-hpage="1" ${f.page===1?'disabled':''} aria-label="처음">«</button><button data-hpage="${f.page-1}" ${f.page===1?'disabled':''} aria-label="이전">‹</button>
       ${pg.map(i=>`<button data-hpage="${i}" class="${i===f.page?'on':''}">${i}</button>`).join('')}
@@ -1079,26 +1082,22 @@ function histByDate(){
     </div>${sel?hPanel(sel):''}</div>`;
 }
 function hPanel(h){
-  const t=h.no?S.templates.find(x=>x.weekly):S.templates.find(x=>x.name===h.title),st=hst(h);
+  const t=h.no?S.templates.find(x=>x.weekly):S.templates.find(x=>x.name===h.title);
   return `<aside class="card wright"><div class="card-h"><h3>${h.no?`[${h.no}회] `:''}${esc(h.title)}</h3></div>
-    <div class="small muted" style="margin:-8px 0 12px">${h.date.replace(/-/g,'.')} ${H_TIME(h)} · ${H_TYPE(h)}</div>
-    <div class="hsum hbtns">
-      <button data-hlist="all:${h.id}"><span>전송건수</span><b class="tnum">${h.sent}</b></button>
-      <button data-hlist="ok:${h.id}"><span>성공</span><b class="tnum">${st.ok}</b></button>
-      <button data-hlist="fail:${h.id}" ${st.fail?'class="bad"':''}><span>실패</span><b class="tnum">${st.fail}</b></button>
-      <div><span>진행상황</span><b>${st.doing?'진행중':'완료'}</b></div></div>
-    <div class="small muted" style="margin-top:6px">숫자 칸을 누르면 그 명단이 떠요.${h.fb?` 성공 중 ${h.fb}건은 문자로 대신 보냈어요.`:''}</div>
-    ${t?`<div style="margin-top:14px">${phone(t,S.contacts.find(sendable),{'회차제목':h.title})}</div>`:''}
+    <div class="small muted" style="margin:-8px 0 12px">${h.date.replace(/-/g,'.')} ${H_TIME(h)} 발송</div>
+    ${t?phone(t,S.contacts.find(sendable),{'회차제목':h.title}):''}
   </aside>`;
 }
 function listModal(kind,id){
-  const h=S.history.find(x=>x.id===id),isFail=l=>l.result==='실패';
+  const h=S.history.find(x=>x.id===id),isFail=l=>l.result==='실패',st=hst(h);
   const logs=h.logs.filter(l=>kind==='all'?true:kind==='fail'?isFail(l):!isFail(l));
-  const name={all:'전체 명단',ok:'성공 명단',fail:'실패 명단'}[kind];
-  modal(`<div class="hm-head"><h3>${name} <span class="tnum muted" style="font-weight:600">${logs.length}명</span></h3><button class="ib" data-close aria-label="닫기">${bi('x',18)}</button></div>
-    <div class="small muted">${h.no?`[${h.no}회] `:''}${esc(h.title)} · ${h.date.replace(/-/g,'.')} ${H_TIME(h)}</div>
-    <div class="gtabs" role="tablist">${[['all','전체',h.logs.length],['ok','성공',h.logs.filter(l=>!isFail(l)).length],['fail','실패',h.logs.filter(isFail).length]].map(([k,l,n])=>`<button role="tab" class="${k===kind?'on':''}" aria-selected="${k===kind}" data-hlist="${k}:${h.id}">${l}<span class="tnum">${n}</span></button>`).join('')}</div>
-    <div class="wtw"><table class="wtable wmini"><thead><tr><th>이름</th><th>상호</th><th>휴대폰</th><th>결과</th>${kind==='fail'?'<th>실패 사유</th>':''}<th></th></tr></thead>
+  const box=(k,label,n,cls='')=>`<button data-hlist="${k}:${h.id}" class="${k===kind?'on':''} ${cls}" aria-pressed="${k===kind}"><span>${label}</span><b class="tnum">${n}</b></button>`;
+  modal(`<div class="hm-head"><h3>${h.no?`[${h.no}회] `:''}${esc(h.title)}</h3><button class="ib" data-close aria-label="닫기">${bi('x',18)}</button></div>
+    <div class="small muted">${h.date.replace(/-/g,'.')} ${H_TIME(h)} 발송</div>
+    <div class="hsum hbtns">${box('all','전송건수',h.sent)}${box('ok','성공',st.ok)}${box('fail','실패',st.fail,st.fail?'bad':'')}<div><span>진행상황</span><b>${st.doing?'진행중':'완료'}</b></div></div>
+    ${h.fb&&kind!=='fail'?`<div class="small muted">성공 ${st.ok}건 중 ${h.fb}건은 카카오톡이 없어 문자로 대신 보냈어요.</div>`:''}
+    <div class="small" style="font-weight:700;color:var(--ink)">${{all:'전체 명단',ok:'성공 명단',fail:'실패 명단'}[kind]} <span class="tnum muted">${logs.length}명</span></div>
+    <div class="wtw wlist"><table class="wtable wmini"><thead><tr><th>이름</th><th>상호</th><th>휴대폰</th><th>결과</th>${kind==='fail'?'<th>실패 사유</th>':''}<th></th></tr></thead>
       <tbody>${logs.map(l=>`<tr><td>${esc(l.name)}</td><td>${esc(l.biz)}</td><td class="tnum">${esc(l.phone)}</td><td>${resTag(l.result)}</td>${kind==='fail'?`<td class="small">${esc(l.why||'번호 확인 필요')}</td>`:''}<td><button class="btn sm" data-hc="${esc(l.phone)}">내역</button></td></tr>`).join('')||`<tr><td colspan="${kind==='fail'?6:5}" class="wempty">${kind==='fail'?'실패한 고객이 없어요.':'명단이 없어요.'}</td></tr>`}</tbody></table></div>`);
   document.querySelector('#layer .modal').classList.add('hmodal');
 }
@@ -1362,7 +1361,7 @@ document.addEventListener('click',e=>{
   if(d.tab){S.tab=d.tab;return render();}
   if('close' in d)return closeModal();
   if(d.hview){S.hView=d.hview;return render();}
-  if(d.hsel){S.hSel=+d.hsel;return render();}
+  if(d.hsel){S.hSel=+d.hsel;render();return listModal('all',+d.hsel);}
   if(d.hlist){const [k,id]=d.hlist.split(':');return listModal(k,+id);}
   if(d.hpage){S.hf.page=+d.hpage;return render();}
   if(d.hopen){S.hOpen=S.hOpen===+d.hopen?null:+d.hopen;return render();}
@@ -1407,8 +1406,8 @@ document.addEventListener('click',e=>{
       S.office.channel=S.chanFlow.id;S.chanStatus='연결됨';S.chanDate=new Date().toISOString().slice(0,10);S.chanFlow={};
       toast('등록됐어요. 세무사 알림톡 그룹에도 저절로 들어갔습니다.');render();break;}
     case 'hf-xls':{const rows=hRows();if(!rows.length)return toast('내려받을 내역이 없습니다.');
-      const aoa=[['전송일자','제목','메시지 타입','전송건수','성공','실패','대기','진행상황'],...rows.map(h=>{const st=hst(h);return [h.date+' '+H_TIME(h),(h.no?`[${h.no}회]`:'[직접]')+h.title,H_TYPE(h),h.sent,st.ok,st.fail,0,st.doing?'진행중':'완료'];})];
-      const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=[{wch:17},{wch:32},{wch:13},{wch:9},{wch:7},{wch:7},{wch:7},{wch:9}];XLSX.utils.book_append_sheet(wb,ws,'발송결과');XLSX.writeFile(wb,`발송결과_${new Date().toISOString().slice(0,10)}.xlsx`);break;}
+      const aoa=[['전송일자','제목','전송건수','성공','실패','대기','진행상황'],...rows.map(h=>{const st=hst(h);return [h.date+' '+H_TIME(h),(h.no?`[${h.no}회]`:'[직접]')+h.title,h.sent,st.ok,st.fail,0,st.doing?'진행중':'완료'];})];
+      const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=[{wch:17},{wch:32},{wch:9},{wch:7},{wch:7},{wch:7},{wch:9}];XLSX.utils.book_append_sheet(wb,ws,'발송결과');XLSX.writeFile(wb,`발송결과_${new Date().toISOString().slice(0,10)}.xlsx`);break;}
     case 'l-save':{const n=S.notices.find(x=>x.id===S.lSel),l=draftList();if(!recipientsOf(n,l).length)return toast('받을 사람을 한 명 이상 골라 주세요. 안 보내시려면 「이번엔 보내지 않기」를 누르세요.');
       const d=new Date();n.list={...l,at:`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`};
       toast(`${recipientsOf(n).length}명 명단을 저장했습니다. 마감 전까지 고칠 수 있어요.`);render();break;}
