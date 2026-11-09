@@ -505,13 +505,15 @@ td.tnum{white-space:nowrap}
 .thead .r,.titem .r{text-align:right}
 
 /* 발송결과 — 발송일별 (템플릿확인과 합침) */
-.thead.hcols,.titem.hcols{grid-template-columns:120px minmax(0,1.4fr) minmax(0,1.8fr) 56px 50px 58px}
+.thead.hcols,.titem.hcols{grid-template-columns:120px minmax(0,1.4fr) minmax(0,1.6fr) 62px 44px 44px 70px}
 .hsum{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .hsum>div{background:#F7F7F9;border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;font-size:12px;color:var(--muted-strong)}
 .hsum b{font-size:17px;color:var(--ink)}
 .hlog{list-style:none;margin:10px 0 0;padding:0;max-height:360px;overflow:auto;border:1px solid var(--line);border-radius:8px}
 .hlog li{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);font-size:13px}
 .hlog li:last-child{border-bottom:0}
+.titem.hcols>b,.titem.hcols>.muted{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.thead.hcols,.titem.hcols{grid-template-columns:118px minmax(0,1.3fr) minmax(0,1.5fr) 58px 40px 40px 66px;gap:10px}
 </style>
 </head>
 <body>
@@ -971,6 +973,8 @@ function tResult(){
   <div class="hstack" style="margin-bottom:14px"><div class="seg" role="group" aria-label="보기 방식"><button data-hview="date" aria-pressed="${S.hView==='date'}">발송일별</button><button data-hview="contact" aria-pressed="${S.hView==='contact'}">거래처별</button></div></div>
   ${S.hView==='date'?histByDate():histByContact()}`;
 }
+/* 발송 한 회의 성공 · 실패 · 진행 — 문자로 대신 간 것도 성공으로 센다 */
+const hst=h=>{const fail=h.logs.filter(l=>l.result==='실패').length,doing=h.logs.some(l=>!l.result||l.result==='대기'||l.result==='발송 중');return {fail,ok:Math.max(0,h.sent-fail-(doing?h.logs.filter(l=>!l.result||l.result==='대기'||l.result==='발송 중').length:0)),doing};};
 function histByDate(){
   const hs=[...S.history].sort((a,b)=>b.date.localeCompare(a.date));
   if(!hs.some(h=>h.id===S.hSel)&&hs.length)S.hSel=hs[0].id;
@@ -980,15 +984,16 @@ function histByDate(){
   const t=h&&tOf(h),fail=h?h.logs.filter(l=>l.result==='실패').length:0;
   return `<div class="tlay">
     <section class="tlist">
-      <div class="thead hcols"><span>발송일자</span><span>템플릿명</span><span>내용</span><span class="r">받은 분</span><span class="r">알림톡</span><span class="r">문자대체</span></div>
+      <div class="thead hcols"><span>발송일자</span><span>템플릿명</span><span>내용</span><span class="r">전송건수</span><span class="r">성공</span><span class="r">실패</span><span class="r">진행상황</span></div>
       <ul role="listbox" aria-label="보낸 알림톡 목록">${hs.map(x=>{const tx=tOf(x);return `<li><button class="titem hcols ${S.hSel===x.id?'on':''}" data-hsel="${x.id}" role="option" aria-selected="${S.hSel===x.id}">
         <span class="small tnum">${dt(x.date)}</span><b>${esc(tx?.name||x.title)}</b>
         <span class="small muted">${x.no?`${x.no}회 · `:'직접 전송 · '}${esc(x.title)}</span>
-        <span class="small tnum r">${x.sent}명</span><span class="small tnum r">${x.ok}</span><span class="small tnum r">${x.fb||'—'}</span></button></li>`;}).join('')||'<li class="empty">아직 보낸 알림톡이 없어요.</li>'}</ul>
+        <span class="small tnum r">${x.sent}</span><span class="small tnum r">${hst(x).ok}</span><span class="small tnum r" ${hst(x).fail?'style="color:var(--bad-ink);font-weight:700"':''}>${hst(x).fail}</span><span class="r">${hst(x).doing?tag('진행 중','warn'):tag('완료','good')}</span></button></li>`;}).join('')||'<li class="empty">아직 보낸 알림톡이 없어요.</li>'}</ul>
     </section>
     ${h?`<section class="card tview"><div class="card-h"><h3>${esc(t?.name||h.title)}</h3>${tag('발송 완료','good')}</div>
       <div class="small muted" style="margin:-6px 0 14px">${dt(h.date)} 발송 · ${h.no?h.no+'회 · ':''}${esc(h.title)}</div>
-      <div class="hsum"><div><span>받은 분</span><b class="tnum">${h.sent}</b></div><div><span>알림톡</span><b class="tnum">${h.ok}</b></div><div><span>문자대체</span><b class="tnum">${h.fb||0}</b></div><div><span>실패</span><b class="tnum" ${fail?'style="color:var(--bad-ink)"':''}>${fail}</b></div></div>
+      <div class="hsum"><div><span>전송건수</span><b class="tnum">${h.sent}</b></div><div><span>성공</span><b class="tnum">${hst(h).ok}</b></div><div><span>실패</span><b class="tnum" ${hst(h).fail?'style="color:var(--bad-ink)"':''}>${hst(h).fail}</b></div><div><span>진행상황</span><b>${hst(h).doing?'진행 중':'완료'}</b></div></div>
+      ${h.fb?`<div class="small muted" style="margin-top:6px">성공 ${hst(h).ok}건 중 ${h.fb}건은 카카오톡이 없어 문자로 대신 보냈어요.</div>`:''}
       ${t?`<div style="margin-top:14px">${phone(t,S.contacts.find(sendable),{'회차제목':h.title})}</div>`:''}
       <button class="btn" style="width:100%;height:42px;margin-top:14px" data-hopen="${h.id}" aria-expanded="${S.hOpen===h.id}">${S.hOpen===h.id?'명단 접기':`받은 고객 명단 보기 (${h.logs.length}명)`}</button>
       ${S.hOpen===h.id?`<ul class="hlog">${h.logs.map(l=>`<li><span><b>${esc(l.name)}</b><span class="small muted"> · ${esc(l.biz)}</span><br><span class="small tnum muted">${esc(l.phone)}</span></span>${resTag(l.result)}<button class="btn sm" data-hc="${esc(l.phone)}">내역</button></li>`).join('')}</ul>`:''}
